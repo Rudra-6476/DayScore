@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<title>DayScore AI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0A0B0F;--bg2:#111318;--bg3:#1A1D26;--bg4:#22263A;
+  --surface:#1E2235;--surface2:#252A42;
+  --accent:#6C63FF;--accent2:#4ECDC4;--accent3:#FF6B6B;--accent4:#FFD93D;
+  --text:#F0F1F5;--text2:#9899A8;--text3:#5A5C70;
+  --green:#2ECC71;--red:#FF4757;--orange:#FFA502;--blue:#3498DB;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --shadow:0 4px 24px rgba(0,0,0,0.4);
+  --r:16px;--r2:12px;--r3:8px;
+  font-family:'Space Grotesk',sans-serif;
+}
+body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.app{display:flex;flex-direction:column;min-height:100vh;max-width:480px;margin:0 auto;position:relative;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0;position:sticky;top:0;z-index:100;background:linear-gradient(var(--bg) 80%,transparent);}
+.logo{font-size:18px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all 0.2s;}
+.icon-btn:hover{background:var(--surface2);}
+.nav{display:flex;background:var(--bg2);border-top:1px solid var(--border);padding:8px 4px;position:sticky;bottom:0;z-index:100;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 4px;border-radius:var(--r3);transition:all 0.2s;}
+.nav-item.active .nav-icon{color:var(--accent);}
+.nav-icon{font-size:20px;transition:transform 0.2s;}
+.nav-item:hover .nav-icon{transform:scale(1.15);}
+.nav-label{font-size:10px;color:var(--text3);font-weight:500;}
+.nav-item.active .nav-label{color:var(--accent);}
+.page{display:none;flex-direction:column;gap:16px;padding:16px 16px 8px;flex:1;}
+.page.active{display:flex;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;transition:border-color 0.2s;}
+.card:hover{border-color:var(--border2);}
+.card-sm{padding:12px;}
+.card-title{font-size:12px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;}
+.score-hero{background:linear-gradient(135deg,#1a1b35 0%,#1E2235 50%,#1a2230 100%);border:1px solid var(--border2);border-radius:var(--r);padding:20px;position:relative;overflow:hidden;}
+.score-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(108,99,255,0.15) 0%,transparent 70%);}
+.score-hero::after{content:'';position:absolute;bottom:-60px;left:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(78,205,196,0.1) 0%,transparent 70%);}
+.score-date{font-size:12px;color:var(--text2);}
+.score-display{display:flex;align-items:flex-end;gap:8px;margin:8px 0;}
+.score-num{font-size:56px;font-weight:700;line-height:1;background:linear-gradient(135deg,#fff 0%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;transition:all 0.3s;}
+.score-max{font-size:18px;color:var(--text3);margin-bottom:8px;}
+.score-label{font-size:13px;color:var(--accent2);}
+.score-bar{width:100%;height:6px;background:var(--bg4);border-radius:3px;margin:12px 0 8px;overflow:hidden;}
+.score-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.8s ease;}
+.score-meta{display:flex;gap:16px;}
+.score-stat{text-align:center;}
+.score-stat-val{font-size:18px;font-weight:600;}
+.score-stat-lbl{font-size:10px;color:var(--text3);}
+.xp-bar-wrap{margin-top:10px;}
+.xp-header{display:flex;justify-content:space-between;margin-bottom:4px;}
+.xp-level{font-size:12px;font-weight:600;color:var(--accent4);}
+.xp-val{font-size:11px;color:var(--text3);}
+.xp-bar{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--accent4),#FF9F43);transition:width 0.8s ease;}
+.streak-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,107,107,0.15);border:1px solid rgba(255,107,107,0.3);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;color:#FF6B6B;}
+.app-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.app-row:last-child{border-bottom:none;}
+.app-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.app-info{flex:1;min-width:0;}
+.app-name{font-size:14px;font-weight:500;}
+.app-time{font-size:12px;color:var(--text2);}
+.app-bar-wrap{width:80px;flex-shrink:0;}
+.app-mini-bar{height:4px;border-radius:2px;margin-bottom:4px;}
+.app-weight{font-size:11px;font-weight:600;text-align:right;}
+.app-mode-tag{font-size:9px;padding:2px 6px;border-radius:20px;font-weight:500;display:inline-block;margin-top:2px;}
+.tabs{display:flex;background:var(--bg3);border-radius:var(--r2);padding:3px;gap:2px;}
+.tab{flex:1;padding:7px 4px;text-align:center;font-size:12px;font-weight:500;border-radius:10px;cursor:pointer;color:var(--text2);transition:all 0.2s;}
+.tab.active{background:var(--surface2);color:var(--text);}
+.insight-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:12px;display:flex;gap:10px;align-items:flex-start;}
+.insight-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.insight-text{font-size:13px;color:var(--text2);line-height:1.5;}
+.insight-text strong{color:var(--text);}
+.insight-tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;margin-top:6px;}
+.focus-hero{background:linear-gradient(135deg,#0d1f2d,#1a2840);border:1px solid rgba(52,152,219,0.25);border-radius:var(--r);padding:20px;text-align:center;}
+.focus-timer{font-size:52px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent2);letter-spacing:-2px;}
+.focus-btn{width:100%;padding:14px;border-radius:var(--r2);border:none;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Space Grotesk',sans-serif;margin-top:12px;}
+.focus-btn.start{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.focus-btn.stop{background:rgba(255,71,87,0.15);border:1px solid rgba(255,71,87,0.3);color:var(--red);}
+.focus-btn:hover{opacity:0.9;transform:translateY(-1px);}
+.focus-boost{display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);border-radius:var(--r2);}
+.toggle{width:40px;height:22px;background:var(--accent);border-radius:11px;cursor:pointer;position:relative;transition:background 0.3s;}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform 0.3s;}
+.toggle.off{background:var(--bg4);}
+.toggle.off::after{transform:none;}
+.toggle.on::after{transform:translateX(18px);}
+.weight-slider{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer;}
+.weight-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.tag-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.tag-btn{padding:14px 8px;border-radius:var(--r2);border:1px solid var(--border2);background:var(--surface);font-size:13px;font-weight:500;color:var(--text);cursor:pointer;text-align:center;transition:all 0.2s;display:flex;flex-direction:column;gap:4px;align-items:center;}
+.tag-btn:hover,.tag-btn.selected{border-color:var(--accent);background:rgba(108,99,255,0.1);color:var(--accent);}
+.tag-emoji{font-size:24px;}
+.achievement{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.ach-icon{font-size:28px;width:44px;text-align:center;}
+.ach-info{flex:1;}
+.ach-name{font-size:13px;font-weight:600;}
+.ach-desc{font-size:11px;color:var(--text3);}
+.ach-locked{opacity:0.35;filter:grayscale(1);}
+.timeline-row{display:flex;gap:8px;align-items:center;padding:5px 0;}
+.tl-time{font-size:10px;color:var(--text3);width:38px;flex-shrink:0;font-family:'DM Mono',monospace;}
+.tl-bar{flex:1;height:24px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:500;}
+.session-popup{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r) var(--r) 0 0;padding:20px;z-index:200;transition:transform 0.3s ease;transform:translateX(-50%) translateY(100%);}
+.session-popup.show{transform:translateX(-50%) translateY(0);}
+.popup-handle{width:36px;height:3px;background:var(--text3);border-radius:2px;margin:0 auto 16px;}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+canvas{max-width:100%;}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 rgba(108,99,255,0)}50%{box-shadow:0 0 20px rgba(108,99,255,0.3)}}
+@keyframes scoreUp{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+.page.active .card{animation:fadeInUp 0.3s ease both;}
+.page.active .card:nth-child(2){animation-delay:0.05s;}
+.page.active .card:nth-child(3){animation-delay:0.1s;}
+.page.active .card:nth-child(4){animation-delay:0.15s;}
+.recording-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 1.5s ease infinite;}
+.row{display:flex;gap:10px;}
+.row>.card{flex:1;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.scroll-y{overflow-y:auto;max-height:260px;}
+.scroll-y::-webkit-scrollbar{width:3px;}
+.scroll-y::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.btn{padding:10px 16px;border-radius:var(--r3);border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all 0.2s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+.btn:hover{opacity:0.85;}
+.notif{background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.25);border-radius:var(--r2);padding:10px 12px;display:flex;gap:8px;align-items:center;font-size:12px;color:#FF8A8A;}
+.notif.hidden{display:none;}
+
+/* Live tracking indicator */
+.live-indicator{display:flex;align-items:center;gap:5px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease infinite;}
+
+/* App input form */
+.app-input-form{display:flex;flex-direction:column;gap:10px;}
+.app-input-form input,.app-input-form select{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r3);padding:10px 12px;color:var(--text);font-size:13px;font-family:'Space Grotesk',sans-serif;width:100%;}
+.app-input-form input::placeholder{color:var(--text3);}
+
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r2);padding:10px 18px;font-size:13px;font-weight:500;z-index:999;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* Score change flash */
+.score-change{font-size:13px;font-weight:700;position:absolute;right:20px;top:20px;opacity:0;transition:all 0.5s;}
+.score-change.up{color:var(--green);}
+.score-change.down{color:var(--red);}
+.score-change.anim{opacity:1;transform:translateY(-8px);}
+
+/* Stats row */
+.stats-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;}
+.stat-chip{flex-shrink:0;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:10px 14px;text-align:center;}
+.stat-chip-val{font-size:20px;font-weight:700;}
+.stat-chip-lbl{font-size:10px;color:var(--text3);margin-top:2px;}
+
+/* Progress ring */
+.progress-ring-wrap{position:relative;width:80px;height:80px;flex-shrink:0;}
+.progress-ring-wrap svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:var(--bg4);stroke-width:6;}
+.ring-fill{fill:none;stroke:url(#ringGrad);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 0.8s ease;}
+.ring-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.ring-num{font-size:18px;font-weight:700;line-height:1;}
+.ring-lbl{font-size:9px;color:var(--text3);}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="logo">DayScore AI</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="streak-badge" id="streak-badge">🔥 <span id="streak-count">0</span> day streak</div>
+      <div class="icon-btn" onclick="showSessionPopup()">＋</div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div class="page active" id="page-dashboard">
+
+    <!-- Notification banner (dynamic) -->
+    <div class="notif hidden" id="notif-banner">
+      ⚠️ <span id="notif-text"></span>
+    </div>
+
+    <!-- Score Hero -->
+    <div class="score-hero card" style="border:none;position:relative;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="score-date" id="score-date"></div>
+        <div class="live-indicator"><div class="live-dot"></div><span style="font-size:11px;color:var(--text3)" id="tracking-label">Tracking</span></div>
+      </div>
+      <div class="score-display">
+        <div class="score-num" id="live-score">0</div>
+        <div class="score-max">/100</div>
+      </div>
+      <div class="score-label" id="score-label">Calculating...</div>
+      <div class="score-bar"><div class="score-fill" id="score-fill" style="width:0%"></div></div>
+      <div class="score-meta">
+        <div class="score-stat"><div class="score-stat-val" id="vs-yesterday" style="color:var(--text2)">—</div><div class="score-stat-lbl">vs yesterday</div></div>
+        <div class="score-stat"><div class="score-stat-val" style="color:var(--accent)" id="weekly-avg">—</div><div class="score-stat-lbl">weekly avg</div></div>
+        <div class="score-stat"><div class="score-stat-val" style="color:var(--accent2)" id="tracked-time">0m</div><div class="score-stat-lbl">tracked today</div></div>
+      </div>
+      <div class="xp-bar-wrap">
+        <div class="xp-header">
+          <div class="xp-level" id="level-label">⚡ Level 1 · Newcomer</div>
+          <div class="xp-val" id="xp-val">0 / 500 XP</div>
+        </div>
+        <div class="xp-bar"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+      </div>
+      <div class="score-change" id="score-change"></div>
+    </div>
+
+    <!-- Focus Score Boost Mode -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--accent)">⚡ Focus Score Boost Mode</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">Amplifies productive apps · Penalizes distractions 2×</div>
+        </div>
+        <div class="toggle" id="boost-toggle" onclick="toggleBoost()"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);border-radius:var(--r3);padding:8px;text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:var(--green)">+1.5×</div>
+          <div style="font-size:10px;color:var(--text3)">Productive weight</div>
+        </div>
+        <div style="flex:1;background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.2);border-radius:var(--r3);padding:8px;text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:var(--red)">−2×</div>
+          <div style="font-size:10px;color:var(--text3)">Distraction penalty</div>
+        </div>
+        <div style="flex:1;background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.2);border-radius:var(--r3);padding:8px;text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:var(--accent)" id="boost-hours">Off</div>
+          <div style="font-size:10px;color:var(--text3)">Boost status</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log App Usage (REAL) -->
+    <div class="card">
+      <div class="card-title">➕ Log App Usage</div>
+      <div class="app-input-form">
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="log-app-name" placeholder="App name (e.g. Notion, YouTube)" style="flex:1;">
+          <input type="number" id="log-app-mins" placeholder="Min" style="width:70px;" min="1" max="720">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <select id="log-app-mode" style="flex:1;">
+            <option value="work">💼 Work</option>
+            <option value="study">📚 Study</option>
+            <option value="entertainment">🎮 Entertainment</option>
+            <option value="timepass">☕ Timepass</option>
+          </select>
+          <button class="btn btn-primary" onclick="logAppUsage()" style="flex-shrink:0;">Log</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's App Usage (dynamic) -->
+    <div class="card">
+      <div class="card-title">Today's App Usage</div>
+      <div class="scroll-y" id="app-usage-list">
+        <div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">No apps logged yet. Add your first session above!</div>
+      </div>
+    </div>
+
+    <!-- AI Insights (dynamic) -->
+    <div class="card">
+      <div class="card-title">🤖 AI Insights</div>
+      <div id="insights-container" style="display:flex;flex-direction:column;gap:8px;">
+        <div class="insight-card">
+          <div class="insight-icon">💡</div>
+          <div><div class="insight-text">Log your first app session to get personalized insights.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS PAGE -->
+  <div class="page" id="page-charts">
+    <div class="tabs">
+      <div class="tab active" onclick="setChartTab('daily',this)">Daily</div>
+      <div class="tab" onclick="setChartTab('weekly',this)">Weekly</div>
+      <div class="tab" onclick="setChartTab('monthly',this)">Monthly</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Productivity Score Trend</div>
+      <div style="position:relative;height:180px;"><canvas id="scoreChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">App Usage Breakdown</div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="position:relative;width:130px;height:130px;flex-shrink:0;">
+          <canvas id="pieChart"></canvas>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+            <div style="font-size:11px;font-weight:700;" id="pie-center-val">0m</div>
+            <div style="font-size:9px;color:var(--text3)">total</div>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;" id="pie-legend"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Activity Timeline</div>
+      <div id="timeline-container" style="display:flex;flex-direction:column;gap:2px;">
+        <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">No sessions logged today.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPS PAGE -->
+  <div class="page" id="page-apps">
+    <div class="card">
+      <div class="card-title">App Weight Manager</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">Set how much each app affects your score (−10 to +10)</div>
+      <div class="scroll-y">
+        <div id="weight-editor"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">➕ Add Custom App</div>
+      <div class="app-input-form">
+        <input type="text" id="new-app-name" placeholder="App name (e.g. Figma)">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--text2);white-space:nowrap;">Weight:</span>
+          <input type="range" min="-10" max="10" value="5" id="new-app-weight" class="weight-slider" style="flex:1;">
+          <span style="font-size:14px;font-weight:700;min-width:28px;text-align:right;" id="new-app-weight-display">+5</span>
+        </div>
+        <button class="btn btn-primary" style="width:100%;" onclick="addCustomApp()">Add App</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎭 YouTube Smart Context</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">YouTube can be both productive and distracting. Set mode weights:</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);border-radius:var(--r3);">
+          <div style="display:flex;gap:8px;align-items:center;"><span>📚</span><div><div style="font-size:13px;font-weight:500;">Study Mode</div><div style="font-size:10px;color:var(--text3)">Lectures, tutorials, courses</div></div></div>
+          <div style="font-size:18px;font-weight:700;color:var(--green)">+7</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(255,71,87,0.08);border:1px solid rgba(255,71,87,0.2);border-radius:var(--r3);">
+          <div style="display:flex;gap:8px;align-items:center;"><span>🎮</span><div><div style="font-size:13px;font-weight:500;">Entertainment Mode</div><div style="font-size:10px;color:var(--text3)">Reels, memes, gaming</div></div></div>
+          <div style="font-size:18px;font-weight:700;color:var(--red)">−6</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--text3);">🤖 AI detection: keywords like "lecture", "tutorial" → auto-mark Study. "memes", "gaming" → Entertainment.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🚫 App Limits</div>
+      <div id="app-limits-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+
+  <!-- FOCUS PAGE -->
+  <div class="page" id="page-focus">
+    <div class="focus-hero card" style="border:none;">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Focus Session</div>
+      <div class="focus-timer" id="focus-timer">25:00</div>
+      <div style="margin-top:8px;">
+        <div style="width:100%;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;">
+          <div id="focus-progress-bar" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width 1s linear;"></div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text3);margin-top:6px;" id="focus-status">Ready to start</div>
+      <button class="focus-btn start" id="focus-main-btn" onclick="toggleFocus()">▶ Start Focus Session</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Session Duration</div>
+      <div class="tabs">
+        <div class="tab active" onclick="setDuration(25,this)">25 min</div>
+        <div class="tab" onclick="setDuration(45,this)">45 min</div>
+        <div class="tab" onclick="setDuration(60,this)">60 min</div>
+        <div class="tab" onclick="setDuration(90,this)">90 min</div>
+      </div>
+    </div>
+
+    <div class="focus-boost" style="margin:0;border-radius:var(--r2);padding:14px;">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--accent)">⚡ Boost Mode During Focus</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">Productive apps get +1.5× during focus</div>
+      </div>
+      <div class="toggle on" id="focus-boost-toggle" onclick="toggleFocusBoost()"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Today's Focus Sessions</div>
+      <div id="focus-sessions-list">
+        <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">No focus sessions yet today.</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card card-sm" style="text-align:center;">
+        <div style="font-size:24px;font-weight:700;color:var(--accent2)" id="focus-session-count">0</div>
+        <div style="font-size:11px;color:var(--text3)">Sessions today</div>
+      </div>
+      <div class="card card-sm" style="text-align:center;">
+        <div style="font-size:24px;font-weight:700;color:var(--accent4)" id="focus-xp-total">+0</div>
+        <div style="font-size:11px;color:var(--text3)">XP from focus</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAMIFY PAGE -->
+  <div class="page" id="page-gamify">
+    <div class="card" style="background:linear-gradient(135deg,#1a1540,#1E2235);border-color:rgba(108,99,255,0.3);">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div id="level-badge" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0;">1</div>
+        <div style="flex:1;">
+          <div style="font-size:16px;font-weight:700;" id="level-title-gamify">Newcomer</div>
+          <div style="font-size:12px;color:var(--text3);" id="xp-to-next"></div>
+          <div class="xp-bar" style="margin-top:8px;"><div class="xp-fill" id="xp-fill-gamify" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card card-sm" style="text-align:center;">
+        <div style="font-size:28px;font-weight:700;color:var(--accent4)" id="today-xp-gamify">+0</div>
+        <div style="font-size:11px;color:var(--text3)">XP earned today</div>
+      </div>
+      <div class="card card-sm" style="text-align:center;">
+        <div style="font-size:28px;font-weight:700;color:var(--red)">🔥 <span id="streak-gamify">0</span></div>
+        <div style="font-size:11px;color:var(--text3)">day streak</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Achievements</div>
+      <div id="achievements-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">This Week's Scores</div>
+      <div style="position:relative;height:150px;"><canvas id="weekChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">All-Time Stats</div>
+      <div class="grid2" style="margin-top:4px;">
+        <div style="background:var(--bg3);border-radius:var(--r3);padding:12px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:var(--accent)" id="stat-total-xp">0</div>
+          <div style="font-size:10px;color:var(--text3)">Total XP</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--r3);padding:12px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:var(--accent2)" id="stat-best-score">0</div>
+          <div style="font-size:10px;color:var(--text3)">Best Score</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--r3);padding:12px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:var(--accent4)" id="stat-total-sessions">0</div>
+          <div style="font-size:10px;color:var(--text3)">Total Sessions</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--r3);padding:12px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:var(--green)" id="stat-focus-count">0</div>
+          <div style="font-size:10px;color:var(--text3)">Focus Sessions</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav">
+    <div class="nav-item active" onclick="goPage('dashboard',this)">
+      <div class="nav-icon">📊</div><div class="nav-label">Dashboard</div>
+    </div>
+    <div class="nav-item" onclick="goPage('charts',this)">
+      <div class="nav-icon">📈</div><div class="nav-label">Charts</div>
+    </div>
+    <div class="nav-item" onclick="goPage('apps',this)">
+      <div class="nav-icon">⚙️</div><div class="nav-label">Apps</div>
+    </div>
+    <div class="nav-item" onclick="goPage('focus',this)">
+      <div class="nav-icon">🎯</div><div class="nav-label">Focus</div>
+    </div>
+    <div class="nav-item" onclick="goPage('gamify',this)">
+      <div class="nav-icon">🏆</div><div class="nav-label">Rewards</div>
+    </div>
+  </div>
+</div>
+
+<!-- Session Popup -->
+<div class="session-popup" id="session-popup">
+  <div class="popup-handle"></div>
+  <div style="font-size:16px;font-weight:600;margin-bottom:4px;">Starting a new session?</div>
+  <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">Tag your purpose to get accurate productivity scores.</div>
+  <div class="tag-grid">
+    <div class="tag-btn" onclick="selectTag(this,'study')"><div class="tag-emoji">📚</div><div style="font-size:13px;font-weight:600;">Study</div><div style="font-size:10px;color:var(--text3)">+7 weight</div></div>
+    <div class="tag-btn" onclick="selectTag(this,'work')"><div class="tag-emoji">💼</div><div style="font-size:13px;font-weight:600;">Work</div><div style="font-size:10px;color:var(--text3)">+6 weight</div></div>
+    <div class="tag-btn" onclick="selectTag(this,'entertainment')"><div class="tag-emoji">🎮</div><div style="font-size:13px;font-weight:600;">Entertainment</div><div style="font-size:10px;color:var(--text3)">−4 weight</div></div>
+    <div class="tag-btn" onclick="selectTag(this,'timepass')"><div class="tag-emoji">☕</div><div style="font-size:13px;font-weight:600;">Timepass</div><div style="font-size:10px;color:var(--text3)">−6 weight</div></div>
+  </div>
+  <div style="margin-top:14px;">
+    <input type="text" id="popup-app-name" placeholder="App name (optional)" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r3);padding:10px 12px;color:var(--text);font-size:13px;font-family:'Space Grotesk',sans-serif;width:100%;">
+  </div>
+  <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="startSession()">Confirm & Start Tracking</button>
+  <button class="btn btn-ghost" style="width:100%;margin-top:8px;" onclick="hideSessionPopup()">Cancel</button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  BACKEND — Data Models & localStorage Engine
+// ═══════════════════════════════════════════════
+
+const DB_KEY = 'dayscore_v2';
+
+const DEFAULT_APPS = [
+  {name:'Notion',   icon:'📝', color:'#4ECDC4', weight:8,  limit:null},
+  {name:'Chrome',   icon:'🌐', color:'#3498DB', weight:5,  limit:120},
+  {name:'YouTube',  icon:'▶️',  color:'#FF4757', weight:2,  limit:60},
+  {name:'Instagram',icon:'📸', color:'#FF6B6B', weight:-7, limit:30},
+  {name:'Slack',    icon:'💬', color:'#FFD93D', weight:4,  limit:null},
+  {name:'TikTok',   icon:'🎵', color:'#FF6B6B', weight:-8, limit:20},
+  {name:'Twitter',  icon:'🐦', color:'#1DA1F2', weight:-5, limit:30},
+  {name:'Spotify',  icon:'🎧', color:'#1DB954', weight:-2, limit:null},
+  {name:'VS Code',  icon:'💻', color:'#007ACC', weight:9,  limit:null},
+  {name:'Figma',    icon:'🎨', color:'#A259FF', weight:8,  limit:null},
+];
+
+const LEVEL_THRESHOLDS = [0,500,1200,2200,3500,5200,7500,10000,13500,18000,24000,32000,42000,55000,70000,90000];
+const LEVEL_TITLES = ['Newcomer','Beginner','Explorer','Learner','Achiever','Focused Achiever','Dedicated','Driven','Expert','Master','Elite','Legend','Grandmaster','Champion','Titan','Ultimate'];
+
+const ACHIEVEMENTS = [
+  {id:'first_log',    icon:'🎯', name:'First Strike',    desc:'Log your first app session',         check: s => s.allTimeSessions >= 1},
+  {id:'score_70',     icon:'⭐', name:'Productive Day',  desc:'Score 70+ in a single day',          check: s => s.bestScore >= 70},
+  {id:'score_90',     icon:'🌟', name:'Peak Performance',desc:'Score 90+ in a single day',          check: s => s.bestScore >= 90},
+  {id:'score_100',    icon:'🏆', name:'Centurion',        desc:'Score 100 in a single day',          check: s => s.bestScore >= 100},
+  {id:'week_streak',  icon:'🔥', name:'Week Warrior',    desc:'7-day productivity streak',          check: s => s.streak >= 7},
+  {id:'month_streak', icon:'🌙', name:'Night Owl',       desc:'30-day streak',                      check: s => s.streak >= 30},
+  {id:'focus_5',      icon:'⚡', name:'Boost Master',    desc:'Complete 5 focus sessions',          check: s => s.totalFocusSessions >= 5},
+  {id:'focus_20',     icon:'🧘', name:'Zen Mode',        desc:'Complete 20 focus sessions',         check: s => s.totalFocusSessions >= 20},
+  {id:'xp_1000',      icon:'💎', name:'XP Collector',   desc:'Earn 1,000 total XP',               check: s => s.totalXp >= 1000},
+  {id:'xp_10000',     icon:'👑', name:'XP King',         desc:'Earn 10,000 total XP',              check: s => s.totalXp >= 10000},
+  {id:'sessions_50',  icon:'🎓', name:'Scholar',         desc:'Log 50 app sessions',               check: s => s.allTimeSessions >= 50},
+];
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (!raw) return createFreshDB();
+    return JSON.parse(raw);
+  } catch(e) { return createFreshDB(); }
+}
+
+function saveDB(db) {
+  try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch(e) {}
+}
+
+function createFreshDB() {
+  return {
+    apps: DEFAULT_APPS,
+    days: {},           // { 'YYYY-MM-DD': { sessions: [], score: 0, xpEarned: 0 } }
+    totalXp: 0,
+    streak: 0,
+    lastActiveDate: null,
+    bestScore: 0,
+    allTimeSessions: 0,
+    totalFocusSessions: 0,
+    boostEnabled: false,
+    focusBoostEnabled: true,
+    unlockedAchievements: [],
+    focusSessions: [],  // all-time focus sessions
+  };
+}
+
+// ═══════════════════════════════════════════════
+//  DATE HELPERS
+// ═══════════════════════════════════════════════
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function getOrCreateDay(db, key) {
+  if (!db.days[key]) db.days[key] = { sessions:[], score:0, xpEarned:0, focusSessions:[] };
+  return db.days[key];
+}
+
+function formatTime(mins) {
+  if (mins < 60) return `${mins}m`;
+  return `${Math.floor(mins/60)}h ${mins%60}m`;
+}
+
+function formatDate() {
+  const d = new Date();
+  return d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}) + ' · Live';
+}
+
+// ═══════════════════════════════════════════════
+//  SCORE ENGINE
+// ═══════════════════════════════════════════════
+
+function getAppConfig(db, name) {
+  const lower = name.toLowerCase();
+  return db.apps.find(a => a.name.toLowerCase() === lower) || { weight: 0, color: '#9899A8', icon: '📱', limit: null };
+}
+
+function getModeMultiplier(mode) {
+  const m = { work:1.2, study:1.15, entertainment:0.6, timepass:0.4 };
+  return m[mode] || 1;
+}
+
+function computeScore(db, dayData) {
+  if (!dayData || !dayData.sessions || dayData.sessions.length === 0) return 0;
+
+  let rawScore = 0;
+  let totalMins = 0;
+
+  for (const sess of dayData.sessions) {
+    const cfg = getAppConfig(db, sess.app);
+    let w = cfg.weight;
+    const modeM = getModeMultiplier(sess.mode);
+
+    // Boost mode logic
+    if (db.boostEnabled) {
+      if (w > 0) w *= 1.5;
+      else w *= 2;
+    }
+
+    // Mode multiplier
+    w *= modeM;
+
+    // Time contribution (normalized per 60 mins)
+    const timeContrib = (sess.mins / 60);
+    rawScore += w * timeContrib;
+    totalMins += sess.mins;
+  }
+
+  // Normalize to 0–100 scale
+  // Base: max possible score with all productive apps is about +20/hr
+  const hoursTracked = totalMins / 60;
+  const maxPossible = Math.max(hoursTracked * 15, 10);
+  let score = 50 + (rawScore / maxPossible) * 50;
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  return score;
+}
+
+function scoreToLabel(s) {
+  if (s >= 90) return 'Legendary 🌟';
+  if (s >= 80) return 'Excellent 🚀';
+  if (s >= 70) return 'Highly Productive 💪';
+  if (s >= 55) return 'On Track 👍';
+  if (s >= 40) return 'Moderate ⚡';
+  if (s >= 25) return 'Low Activity 😐';
+  return 'Getting Started 🌱';
+}
+
+function scoreToXP(score, mins) {
+  const base = Math.round(score * 0.5 + (mins / 10));
+  return Math.max(1, base);
+}
+
+function getLevelInfo(totalXp) {
+  let level = 1;
+  for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
+    if (totalXp >= LEVEL_THRESHOLDS[i]) { level = i + 1; break; }
+  }
+  level = Math.min(level, LEVEL_THRESHOLDS.length);
+  const currentThresh = LEVEL_THRESHOLDS[level - 1] || 0;
+  const nextThresh = LEVEL_THRESHOLDS[level] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
+  const pct = nextThresh > currentThresh ? Math.round((totalXp - currentThresh) / (nextThresh - currentThresh) * 100) : 100;
+  return { level, title: LEVEL_TITLES[level-1] || 'Ultimate', currentXp: totalXp - currentThresh, nextXp: nextThresh - currentThresh, pct };
+}
+
+// ═══════════════════════════════════════════════
+//  STREAK ENGINE
+// ═══════════════════════════════════════════════
+
+function updateStreak(db) {
+  const today = todayKey();
+  if (db.lastActiveDate === today) return; // Already counted today
+
+  const yesterday = (() => {
+    const d = new Date(); d.setDate(d.getDate() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  })();
+
+  if (db.lastActiveDate === yesterday) {
+    db.streak++;
+  } else if (db.lastActiveDate !== today) {
+    db.streak = 1;
+  }
+  db.lastActiveDate = today;
+}
+
+// ═══════════════════════════════════════════════
+//  ACHIEVEMENT ENGINE
+// ═══════════════════════════════════════════════
+
+function checkAchievements(db) {
+  const newlyUnlocked = [];
+  for (const ach of ACHIEVEMENTS) {
+    if (!db.unlockedAchievements.includes(ach.id) && ach.check(db)) {
+      db.unlockedAchievements.push(ach.id);
+      newlyUnlocked.push(ach);
+    }
+  }
+  return newlyUnlocked;
+}
+
+// ═══════════════════════════════════════════════
+//  CORE ACTIONS
+// ═══════════════════════════════════════════════
+
+let db = loadDB();
+let selectedTag = 'work';
+let lastScore = 0;
+
+function logAppUsage() {
+  const nameEl = document.getElementById('log-app-name');
+  const minsEl = document.getElementById('log-app-mins');
+  const modeEl = document.getElementById('log-app-mode');
+
+  const name = nameEl.value.trim();
+  const mins = parseInt(minsEl.value);
+  const mode = modeEl.value;
+
+  if (!name) { showToast('⚠️ Enter an app name'); return; }
+  if (!mins || mins < 1) { showToast('⚠️ Enter valid minutes'); return; }
+
+  const key = todayKey();
+  const day = getOrCreateDay(db, key);
+
+  const session = {
+    app: name, mins, mode,
+    timestamp: Date.now(),
+    time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})
+  };
+
+  day.sessions.push(session);
+  db.allTimeSessions++;
+  updateStreak(db);
+
+  const oldScore = day.score;
+  day.score = computeScore(db, day);
+  const xpGained = scoreToXP(day.score, mins);
+  day.xpEarned = (day.xpEarned || 0) + xpGained;
+  db.totalXp += xpGained;
+
+  if (day.score > db.bestScore) db.bestScore = day.score;
+
+  const newAchs = checkAchievements(db);
+  saveDB(db);
+
+  nameEl.value = '';
+  minsEl.value = '';
+
+  showScoreChange(day.score - oldScore);
+  renderDashboard();
+  renderChartsIfActive();
+
+  showToast(`✅ Logged ${formatTime(mins)} on ${name} · +${xpGained} XP`);
+
+  if (newAchs.length > 0) {
+    setTimeout(() => showToast(`🏆 Achievement unlocked: ${newAchs[0].name}!`), 1500);
+  }
+}
+
+function addCustomApp() {
+  const name = document.getElementById('new-app-name').value.trim();
+  const weight = parseInt(document.getElementById('new-app-weight').value);
+  if (!name) { showToast('⚠️ Enter an app name'); return; }
+  if (db.apps.find(a => a.name.toLowerCase() === name.toLowerCase())) {
+    showToast('⚠️ App already exists'); return;
+  }
+
+  const colors = ['#4ECDC4','#3498DB','#A259FF','#FF9F43','#2ECC71','#007ACC','#E84393'];
+  const icons = ['📱','🖥','💻','🎨','📊','🔧','🌐'];
+  db.apps.push({
+    name, weight, icon: icons[Math.floor(Math.random()*icons.length)],
+    color: colors[Math.floor(Math.random()*colors.length)], limit: null
+  });
+  saveDB(db);
+  renderWeightEditor();
+  renderAppLimits();
+  document.getElementById('new-app-name').value = '';
+  showToast(`✅ Added ${name} with weight ${weight > 0 ? '+' : ''}${weight}`);
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER FUNCTIONS
+// ═══════════════════════════════════════════════
+
+function renderDashboard() {
+  const key = todayKey();
+  const day = getOrCreateDay(db, key);
+  const score = day.score;
+  const levelInfo = getLevelInfo(db.totalXp);
+
+  // Score hero
+  const scoreEl = document.getElementById('live-score');
+  const oldNum = parseInt(scoreEl.textContent) || 0;
+  scoreEl.textContent = score;
+  document.getElementById('score-fill').style.width = score + '%';
+  document.getElementById('score-label').textContent = scoreToLabel(score);
+  document.getElementById('score-date').textContent = formatDate();
+
+  // vs yesterday
+  const yesterday = (() => {
+    const d = new Date(); d.setDate(d.getDate()-1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  })();
+  const yDay = db.days[yesterday];
+  const vsYest = document.getElementById('vs-yesterday');
+  if (yDay) {
+    const diff = score - yDay.score;
+    vsYest.textContent = (diff >= 0 ? '+' : '') + diff;
+    vsYest.style.color = diff >= 0 ? 'var(--green)' : 'var(--red)';
+  } else {
+    vsYest.textContent = '—';
+    vsYest.style.color = 'var(--text2)';
+  }
+
+  // Weekly avg
+  const last7 = Array.from({length:7},(_,i)=>{
+    const d = new Date(); d.setDate(d.getDate()-i);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }).map(k => db.days[k]?.score || 0);
+  const avg = Math.round(last7.filter(s=>s>0).reduce((a,b)=>a+b,0) / Math.max(1,last7.filter(s=>s>0).length));
+  document.getElementById('weekly-avg').textContent = avg || '—';
+
+  // Tracked time
+  const totalMins = day.sessions.reduce((a,s)=>a+s.mins,0);
+  document.getElementById('tracked-time').textContent = formatTime(totalMins);
+
+  // XP / Level
+  document.getElementById('level-label').textContent = `⚡ Level ${levelInfo.level} · ${levelInfo.title}`;
+  document.getElementById('xp-val').textContent = `${db.totalXp.toLocaleString()} XP`;
+  document.getElementById('xp-fill').style.width = levelInfo.pct + '%';
+
+  // Streak
+  document.getElementById('streak-count').textContent = db.streak;
+
+  // Boost toggle
+  const bt = document.getElementById('boost-toggle');
+  bt.className = 'toggle ' + (db.boostEnabled ? 'on' : 'off');
+  document.getElementById('boost-hours').textContent = db.boostEnabled ? 'Active' : 'Off';
+
+  // Notification banner
+  const notifBanner = document.getElementById('notif-banner');
+  const overLimitApps = getOverLimitApps(db, day);
+  if (overLimitApps.length > 0) {
+    const ola = overLimitApps[0];
+    document.getElementById('notif-text').innerHTML = `You've spent <strong>${formatTime(ola.mins)}</strong> on ${ola.app} — ${formatTime(ola.mins - ola.limit)} over your daily limit.`;
+    notifBanner.classList.remove('hidden');
+  } else {
+    notifBanner.classList.add('hidden');
+  }
+
+  // App usage list
+  renderAppUsageList(db, day);
+
+  // AI Insights
+  renderInsights(db, day);
+}
+
+function getOverLimitApps(db, day) {
+  const appTotals = {};
+  for (const s of day.sessions) {
+    appTotals[s.app] = (appTotals[s.app] || 0) + s.mins;
+  }
+  return Object.entries(appTotals).filter(([app, mins]) => {
+    const cfg = getAppConfig(db, app);
+    return cfg.limit && mins > cfg.limit;
+  }).map(([app, mins]) => ({ app, mins, limit: getAppConfig(db, app).limit }));
+}
+
+function renderAppUsageList(db, day) {
+  const el = document.getElementById('app-usage-list');
+  if (!day.sessions || day.sessions.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">No apps logged yet. Add your first session above!</div>';
+    return;
+  }
+
+  // Aggregate by app
+  const appTotals = {};
+  for (const s of day.sessions) {
+    if (!appTotals[s.app]) appTotals[s.app] = { mins:0, modes:{}, sessions:0 };
+    appTotals[s.app].mins += s.mins;
+    appTotals[s.app].modes[s.mode] = (appTotals[s.app].modes[s.mode]||0) + s.mins;
+    appTotals[s.app].sessions++;
+  }
+
+  const maxMins = Math.max(...Object.values(appTotals).map(a=>a.mins));
+
+  el.innerHTML = Object.entries(appTotals).sort((a,b)=>b[1].mins-a[1].mins).map(([name, data]) => {
+    const cfg = getAppConfig(db, name);
+    const pct = Math.round(data.mins / maxMins * 100);
+    const isOver = cfg.limit && data.mins > cfg.limit;
+    const modeTag = Object.entries(data.modes).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'work';
+    const modeColors = { work:'var(--green)', study:'var(--blue)', entertainment:'var(--red)', timepass:'var(--orange)' };
+    const modeEmojis = { work:'💼', study:'📚', entertainment:'🎮', timepass:'☕' };
+    const weightLabel = cfg.weight !== 0 ? (cfg.weight > 0 ? `+${cfg.weight}` : cfg.weight) : '0';
+    const weightColor = cfg.weight > 0 ? 'var(--green)' : cfg.weight < 0 ? 'var(--red)' : 'var(--text3)';
+
+    return `<div class="app-row">
+      <div class="app-icon" style="background:${cfg.color}22;color:${cfg.color}">${cfg.icon}</div>
+      <div class="app-info">
+        <div class="app-name">${name}</div>
+        <div class="app-time">${formatTime(data.mins)} · ${data.sessions} session${data.sessions>1?'s':''}</div>
+        <div class="app-mode-tag" style="background:${modeColors[modeTag]}22;color:${modeColors[modeTag]}">${modeEmojis[modeTag]} ${modeTag.charAt(0).toUpperCase()+modeTag.slice(1)}${isOver?' · ⚠️ Over limit':''}</div>
+      </div>
+      <div class="app-bar-wrap">
+        <div style="width:${pct}%;background:${isOver?'var(--red)':cfg.color};opacity:0.7;height:4px;border-radius:2px;margin-bottom:4px;"></div>
+        <div style="font-size:11px;font-weight:600;text-align:right;color:${weightColor}">${weightLabel}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderInsights(db, day) {
+  const container = document.getElementById('insights-container');
+  const insights = generateInsights(db, day);
+  if (insights.length === 0) {
+    container.innerHTML = '<div class="insight-card"><div class="insight-icon">💡</div><div><div class="insight-text">Log more sessions to get personalized insights.</div></div></div>';
+    return;
+  }
+  container.innerHTML = insights.map(ins => `
+    <div class="insight-card">
+      <div class="insight-icon">${ins.icon}</div>
+      <div>
+        <div class="insight-text">${ins.text}</div>
+        <div class="insight-tag" style="background:${ins.tagBg};color:${ins.tagColor}">${ins.tag}</div>
+      </div>
+    </div>`).join('');
+}
+
+function generateInsights(db, day) {
+  const insights = [];
+  if (!day.sessions || day.sessions.length === 0) return insights;
+
+  const appTotals = {};
+  for (const s of day.sessions) {
+    appTotals[s.app] = (appTotals[s.app]||0) + s.mins;
+  }
+
+  // Over-limit insight
+  const overLimits = getOverLimitApps(db, day);
+  for (const ol of overLimits.slice(0,1)) {
+    const cfg = getAppConfig(db, ol.app);
+    const scoreLoss = Math.round(Math.abs(cfg.weight) * (ol.mins - ol.limit) / 60 * 10);
+    insights.push({
+      icon:'💡',
+      text:`<strong>Reduce ${ol.app} by ${formatTime(ol.mins - ol.limit)}</strong> to protect your score. You're ${formatTime(ol.mins - ol.limit)} over your limit.`,
+      tag:`Score Impact: ~${scoreLoss} pts`,
+      tagBg:'rgba(255,217,61,0.15)',tagColor:'var(--accent4)'
+    });
+  }
+
+  // Productive app praise
+  const productive = Object.entries(appTotals).filter(([app]) => getAppConfig(db, app).weight >= 6).sort((a,b)=>b[1]-a[1]);
+  if (productive.length > 0 && productive[0][1] >= 30) {
+    insights.push({
+      icon:'⭐',
+      text:`<strong>${formatTime(productive[0][1])} on ${productive[0][0]}</strong> — great focused work! This is boosting your score significantly.`,
+      tag:'Top Productive App',
+      tagBg:'rgba(46,204,113,0.15)',tagColor:'var(--green)'
+    });
+  }
+
+  // Distraction warning
+  const distractions = Object.entries(appTotals).filter(([app]) => getAppConfig(db, app).weight <= -5).sort((a,b)=>b[1]-a[1]);
+  if (distractions.length > 0 && distractions[0][1] >= 20) {
+    const app = distractions[0][0];
+    insights.push({
+      icon:'⚠️',
+      text:`<strong>${app} is your biggest distraction today</strong> at ${formatTime(distractions[0][1])}. Consider limiting it to ${formatTime(Math.round(distractions[0][1]*0.5))}.`,
+      tag:'Reduce for +Score',
+      tagBg:'rgba(255,71,87,0.15)',tagColor:'var(--red)'
+    });
+  }
+
+  // Streak insight
+  if (db.streak >= 3) {
+    insights.push({
+      icon:'🔥',
+      text:`<strong>${db.streak}-day streak!</strong> You're on a roll. Keep logging today to maintain it.`,
+      tag:`${db.streak} Days Strong`,
+      tagBg:'rgba(255,107,107,0.15)',tagColor:'#FF6B6B'
+    });
+  }
+
+  // Focus session suggestion
+  const totalMins = day.sessions.reduce((a,s)=>a+s.mins,0);
+  if (totalMins > 60 && day.focusSessions?.length === 0) {
+    insights.push({
+      icon:'🎯',
+      text:`You've tracked ${formatTime(totalMins)} today but no focus sessions. <strong>Start a 25-min focus session</strong> to earn bonus XP!`,
+      tag:'Try Focus Mode',
+      tagBg:'rgba(108,99,255,0.15)',tagColor:'var(--accent)'
+    });
+  }
+
+  return insights.slice(0, 4);
+}
+
+// ═══════════════════════════════════════════════
+//  CHARTS
+// ═══════════════════════════════════════════════
+
+let scoreChartInst = null, pieChartInst = null, weekChartInst = null;
+
+function renderChartsIfActive() {
+  if (document.getElementById('page-charts').classList.contains('active')) initCharts(true);
+  if (document.getElementById('page-gamify').classList.contains('active')) initWeekChart(true);
+}
+
+function initCharts(force) {
+  const key = todayKey();
+  const day = getOrCreateDay(db, key);
+
+  // Score trend from sessions
+  const sessionsToday = [...day.sessions].sort((a,b)=>a.timestamp-b.timestamp);
+  const labels = ['Start', ...sessionsToday.map(s=>s.time), 'Now'];
+  const scores = [0];
+  let runSessions = [];
+  for (const s of sessionsToday) {
+    runSessions.push(s);
+    const tmpDay = {...day, sessions: runSessions};
+    scores.push(computeScore(db, tmpDay));
+  }
+  scores.push(day.score);
+
+  const sc = document.getElementById('scoreChart');
+  if (sc) {
+    if (scoreChartInst) scoreChartInst.destroy();
+    scoreChartInst = new Chart(sc, {
+      type:'line',
+      data:{
+        labels,
+        datasets:[{
+          data: scores,
+          borderColor:'#6C63FF',
+          backgroundColor:'rgba(108,99,255,0.1)',
+          fill:true, tension:0.4,
+          pointBackgroundColor:'#6C63FF', pointRadius:3
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{color:'#9899A8',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}},
+          y:{min:0,max:100,ticks:{color:'#9899A8',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}}
+        }
+      }
+    });
+  }
+
+  // Pie chart
+  const appTotals = {};
+  for (const s of day.sessions) appTotals[s.app] = (appTotals[s.app]||0) + s.mins;
+  const sorted = Object.entries(appTotals).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const totalMins = Object.values(appTotals).reduce((a,b)=>a+b,0);
+
+  const pc = document.getElementById('pieChart');
+  if (pc) {
+    if (pieChartInst) pieChartInst.destroy();
+    if (sorted.length === 0) {
+      document.getElementById('pie-legend').innerHTML = '<div style="color:var(--text3);font-size:12px">No data yet</div>';
+      document.getElementById('pie-center-val').textContent = '0m';
+    } else {
+      const colors = sorted.map(([app]) => getAppConfig(db, app).color || '#6C63FF');
+      pieChartInst = new Chart(pc, {
+        type:'doughnut',
+        data:{labels:sorted.map(([a])=>a), datasets:[{data:sorted.map(([,m])=>m), backgroundColor:colors, borderWidth:0}]},
+        options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false}}}
+      });
+      document.getElementById('pie-center-val').textContent = formatTime(totalMins);
+      document.getElementById('pie-legend').innerHTML = sorted.map(([app,mins]) => {
+        const cfg = getAppConfig(db, app);
+        return `<div style="display:flex;justify-content:space-between;font-size:12px;">
+          <span style="display:flex;align-items:center;gap:5px;">
+            <span style="width:8px;height:8px;border-radius:2px;background:${cfg.color};display:inline-block;"></span>${app}
+          </span>
+          <span style="color:var(--text2)">${formatTime(mins)}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Timeline
+  const tl = document.getElementById('timeline-container');
+  if (sessionsToday.length === 0) {
+    tl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">No sessions logged today.</div>';
+  } else {
+    const tlColors = { work:'rgba(46,204,113,0.25)', study:'rgba(52,152,219,0.25)', entertainment:'rgba(255,71,87,0.2)', timepass:'rgba(255,165,0,0.2)' };
+    const tlTextColors = { work:'var(--green)', study:'var(--blue)', entertainment:'#FF4757', timepass:'var(--orange)' };
+    tl.innerHTML = sessionsToday.map(s => {
+      const cfg = getAppConfig(db, s.app);
+      const modeEmoji = {work:'💼',study:'📚',entertainment:'🎮',timepass:'☕'}[s.mode]||'📱';
+      return `<div class="timeline-row">
+        <div class="tl-time">${s.time}</div>
+        <div class="tl-bar" style="background:${tlColors[s.mode]||'rgba(108,99,255,0.2)'};color:${tlTextColors[s.mode]||'var(--accent)'}">
+          ${modeEmoji} ${s.app} · ${formatTime(s.mins)}
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function initWeekChart(force) {
+  const wc = document.getElementById('weekChart');
+  if (!wc) return;
+
+  const last7 = Array.from({length:7},(_,i)=>{
+    const d = new Date(); d.setDate(d.getDate()-6+i);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const label = d.toLocaleDateString('en-US',{weekday:'short'});
+    return { key, label, score: db.days[key]?.score || 0 };
+  });
+
+  if (weekChartInst) weekChartInst.destroy();
+  weekChartInst = new Chart(wc, {
+    type:'bar',
+    data:{
+      labels: last7.map(d=>d.label),
+      datasets:[{
+        data: last7.map(d=>d.score),
+        backgroundColor: ctx => {
+          const idx = ctx.dataIndex;
+          return idx === 6 ? '#6C63FF' : 'rgba(108,99,255,0.3)';
+        },
+        borderRadius:6
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#9899A8',font:{size:10}},grid:{display:false}},
+        y:{min:0,max:100,ticks:{color:'#9899A8',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}}
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  WEIGHT EDITOR
+// ═══════════════════════════════════════════════
+
+function renderWeightEditor() {
+  const el = document.getElementById('weight-editor');
+  if (!el) return;
+  el.innerHTML = db.apps.map((a,i) => {
+    const col = a.weight > 0 ? '#2ECC71' : a.weight < 0 ? '#FF4757' : '#9899A8';
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="width:28px;height:28px;border-radius:8px;background:${a.color}22;color:${a.color};display:flex;align-items:center;justify-content:center;font-size:14px;">${a.icon}</div>
+          <span style="font-size:13px;font-weight:500;">${a.name}</span>
+        </div>
+        <span style="font-size:16px;font-weight:700;color:${col};min-width:32px;text-align:right;" id="wval-${i}">${a.weight > 0 ? '+' : ''}${a.weight}</span>
+      </div>
+      <input type="range" min="-10" max="10" value="${a.weight}" class="weight-slider" style="width:100%;accent-color:${a.weight>0?'#2ECC71':'#FF4757'};"
+        oninput="updateWeight(${i},this.value)">
+    </div>`;
+  }).join('');
+}
+
+function updateWeight(i, val) {
+  db.apps[i].weight = parseInt(val);
+  const el = document.getElementById('wval-' + i);
+  if (el) {
+    const col = val > 0 ? '#2ECC71' : val < 0 ? '#FF4757' : '#9899A8';
+    el.textContent = (val > 0 ? '+' : '') + val;
+    el.style.color = col;
+  }
+  // Recalculate today's score with new weights
+  const key = todayKey();
+  const day = getOrCreateDay(db, key);
+  day.score = computeScore(db, day);
+  saveDB(db);
+  renderDashboard();
+}
+
+function renderAppLimits() {
+  const el = document.getElementById('app-limits-list');
+  if (!el) return;
+  el.innerHTML = db.apps.slice(0,8).map((a,i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span>${a.icon}</span>
+        <div>
+          <div style="font-size:13px;">${a.name}</div>
+          <div style="font-size:10px;color:var(--text3)">${a.limit ? 'Limit: ' + formatTime(a.limit) : 'No limit set'}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input type="number" placeholder="min" min="5" max="720" value="${a.limit||''}"
+          style="width:55px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r3);padding:5px 8px;color:var(--text);font-size:12px;font-family:'Space Grotesk',sans-serif;"
+          onchange="setAppLimit(${i},this.value)">
+      </div>
+    </div>`).join('');
+}
+
+function setAppLimit(i, val) {
+  const mins = parseInt(val);
+  db.apps[i].limit = (isNaN(mins) || mins <= 0) ? null : mins;
+  saveDB(db);
+  renderDashboard();
+  showToast(`✅ Limit ${db.apps[i].limit ? 'set to ' + formatTime(db.apps[i].limit) : 'removed'} for ${db.apps[i].name}`);
+}
+
+// ═══════════════════════════════════════════════
+//  GAMIFY PAGE
+// ═══════════════════════════════════════════════
+
+function renderGamify() {
+  const levelInfo = getLevelInfo(db.totalXp);
+  document.getElementById('level-badge').textContent = levelInfo.level;
+  document.getElementById('level-title-gamify').textContent = levelInfo.title;
+  document.getElementById('xp-to-next').textContent = `${(db.totalXp).toLocaleString()} / ${(db.totalXp - levelInfo.currentXp + levelInfo.nextXp).toLocaleString()} XP to Level ${levelInfo.level+1}`;
+  document.getElementById('xp-fill-gamify').style.width = levelInfo.pct + '%';
+
+  const key = todayKey();
+  const day = getOrCreateDay(db, key);
+  document.getElementById('today-xp-gamify').textContent = '+' + (day.xpEarned || 0);
+  document.getElementById('streak-gamify').textContent = db.streak;
+
+  // All-time stats
+  document.getElementById('stat-total-xp').textContent = db.totalXp.toLocaleString();
+  document.getElementById('stat-best-score').textContent = db.bestScore;
+  document.getElementById('stat-total-sessions').textContent = db.allTimeSessions;
+  document.getElementById('stat-focus-count').textContent = db.totalFocusSessions;
+
+  // Achievements
+  const achEl = document.getElementById('achievements-list');
+  achEl.innerHTML = ACHIEVEMENTS.map(ach => {
+    const unlocked = db.unlockedAchievements.includes(ach.id);
+    return `<div class="achievement${unlocked?'':' ach-locked'}">
+      <div class="ach-icon">${ach.icon}</div>
+      <div class="ach-info">
+        <div class="ach-name">${ach.name}</div>
+        <div class="ach-desc">${ach.desc}</div>
+      </div>
+      <div style="font-size:11px;color:${unlocked?'var(--green)':'var(--text3)'}">${unlocked?'Unlocked':'Locked'}</div>
+    </div>`;
+  }).join('');
+
+  initWeekChart();
+}
+
+// ═══════════════════════════════════════════════
+//  FOCUS TIMER
+// ═══════════════════════════════════════════════
+
+let focusRunning = false, focusSecs = 25*60, focusMax = 25*60, focusInterval = null, focusBoostActive = true;
+
+function setDuration(mins, el) {
+  if (focusRunning) return;
+  el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  focusSecs = mins*60; focusMax = mins*60;
+  updateTimerDisplay();
+  document.getElementById('focus-progress-bar').style.width = '0%';
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(focusSecs/60).toString().padStart(2,'0');
+  const s = (focusSecs%60).toString().padStart(2,'0');
+  document.getElementById('focus-timer').textContent = m+':'+s;
+  const pct = (1 - focusSecs/focusMax)*100;
+  document.getElementById('focus-progress-bar').style.width = pct+'%';
+}
+
+function toggleFocus() {
+  const btn = document.getElementById('focus-main-btn');
+  const status = document.getElementById('focus-status');
+  if (!focusRunning) {
+    focusRunning = true;
+    btn.textContent = '⏸ Pause Session';
+    btn.className = 'focus-btn stop';
+    status.textContent = 'Session in progress...';
+    focusInterval = setInterval(() => {
+      if (focusSecs > 0) { focusSecs--; updateTimerDisplay(); }
+      else {
+        clearInterval(focusInterval); focusRunning = false;
+        btn.textContent = '▶ Start Focus Session';
+        btn.className = 'focus-btn start';
+        const minsCompleted = Math.round(focusMax/60);
+        completeFocusSession(minsCompleted);
+        focusSecs = focusMax;
+        updateTimerDisplay();
+        document.getElementById('focus-progress-bar').style.width = '0%';
+      }
+    },1000);
+  } else {
+    focusRunning = false; clearInterval(focusInterval);
+    btn.textContent = '▶ Resume Session'; btn.className = 'focus-btn start';
+    status.textContent = 'Paused';
+  }
+}
+
+function completeFocusSession(mins) {
+  const xp = Math.round(mins * 2.5);
+  db.totalXp += xp;
+  db.totalFocusSessions++;
+
+  const key = todayKey();
+  const day = getOrCreateDay(db, key);
+  if (!day.focusSessions) day.focusSessions = [];
+
+  const sess = {
+    mins, xp, score: day.score,
+    time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+    label: ['Morning','Midday','Afternoon','Evening','Night'][Math.floor(new Date().getHours()/5)] + ' Session'
+  };
+  day.focusSessions.push(sess);
+  if (!db.focusSessions) db.focusSessions = [];
+  db.focusSessions.push(sess);
+
+  updateStreak(db);
+  const newAchs = checkAchievements(db);
+  saveDB(db);
+
+  document.getElementById('focus-status').textContent = `✅ Session complete! +${xp} XP`;
+  showToast(`🎯 Focus session done! +${xp} XP earned`);
+  if (newAchs.length > 0) setTimeout(()=>showToast(`🏆 Achievement: ${newAchs[0].name}!`), 1500);
+
+  renderFocusSessions();
+  renderDashboard();
+}
+
+function renderFocusSessions() {
+  const key = todayKey();
+  const day = getOrCreateDay(db, key);
+  const sessions = day.focusSessions || [];
+  const el = document.getElementById('focus-sessions-list');
+  const totalXp = sessions.reduce((a,s)=>a+s.xp,0);
+
+  document.getElementById('focus-session-count').textContent = sessions.length;
+  document.getElementById('focus-xp-total').textContent = '+' + totalXp;
+
+  if (sessions.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">No focus sessions yet today.</div>';
+    return;
+  }
+  el.innerHTML = sessions.map(s => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(78,205,196,0.08);border-radius:var(--r3);margin-bottom:8px;">
+      <div><div style="font-size:13px;font-weight:500;">${s.label}</div><div style="font-size:11px;color:var(--text3)">${s.time} · ${s.mins} min</div></div>
+      <div style="text-align:right;"><div style="font-size:16px;font-weight:700;color:var(--green)">+${s.xp} XP</div><div style="font-size:10px;color:var(--text3)">score: ${s.score}</div></div>
+    </div>`).join('');
+}
+
+function toggleFocusBoost() {
+  const t = document.getElementById('focus-boost-toggle');
+  focusBoostActive = !focusBoostActive;
+  t.className = 'toggle ' + (focusBoostActive ? 'on' : 'off');
+}
+
+// ═══════════════════════════════════════════════
+//  BOOST TOGGLE
+// ═══════════════════════════════════════════════
+
+function toggleBoost() {
+  db.boostEnabled = !db.boostEnabled;
+  const key = todayKey();
+  const day = getOrCreateDay(db, key);
+  day.score = computeScore(db, day);
+  if (day.score > db.bestScore) db.bestScore = day.score;
+  saveDB(db);
+  renderDashboard();
+  showToast(db.boostEnabled ? '⚡ Boost Mode activated!' : 'Boost Mode disabled');
+}
+
+// ═══════════════════════════════════════════════
+//  SESSION POPUP
+// ═══════════════════════════════════════════════
+
+function showSessionPopup() {
+  document.querySelectorAll('.tag-btn').forEach(t=>t.classList.remove('selected'));
+  document.getElementById('popup-app-name').value = '';
+  document.getElementById('session-popup').classList.add('show');
+}
+function hideSessionPopup() { document.getElementById('session-popup').classList.remove('show'); }
+function selectTag(el, tag) {
+  document.querySelectorAll('.tag-btn').forEach(t=>t.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTag = tag;
+  document.getElementById('log-app-mode').value = tag;
+}
+function startSession() {
+  const appName = document.getElementById('popup-app-name').value.trim();
+  hideSessionPopup();
+  if (appName) {
+    document.getElementById('log-app-name').value = appName;
+    document.getElementById('log-app-mode').value = selectedTag;
+    document.getElementById('log-app-mins').focus();
+    showToast(`Tagged as ${selectedTag}. Enter minutes and log!`);
+  } else {
+    showToast(`Mode set to ${selectedTag}. Log an app above!`);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════
+
+function goPage(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  if (id==='charts') initCharts();
+  if (id==='gamify') { renderGamify(); }
+  if (id==='apps') { renderWeightEditor(); renderAppLimits(); }
+  if (id==='focus') renderFocusSessions();
+}
+
+function setChartTab(type, el) {
+  el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+//  TOAST & SCORE CHANGE ANIMATION
+// ═══════════════════════════════════════════════
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+function showScoreChange(diff) {
+  if (diff === 0) return;
+  const el = document.getElementById('score-change');
+  el.textContent = (diff > 0 ? '+' : '') + diff;
+  el.className = 'score-change ' + (diff > 0 ? 'up' : 'down');
+  requestAnimationFrame(()=>{ el.classList.add('anim'); });
+  setTimeout(()=>el.classList.remove('anim'), 1000);
+}
+
+// ═══════════════════════════════════════════════
+//  CUSTOM APP WEIGHT DISPLAY
+// ═══════════════════════════════════════════════
+
+document.getElementById('new-app-weight').addEventListener('input', function() {
+  const v = parseInt(this.value);
+  const d = document.getElementById('new-app-weight-display');
+  d.textContent = (v>0?'+':'')+v;
+  d.style.color = v>0?'var(--green)':v<0?'var(--red)':'var(--text3)';
+});
+
+// ═══════════════════════════════════════════════
+//  AUTO-REFRESH & INIT
+// ═══════════════════════════════════════════════
+
+// Auto-refresh score every minute (simulate live tracking)
+setInterval(()=>{ renderDashboard(); }, 60000);
+
+// Init
+renderDashboard();
+renderWeightEditor();
+renderAppLimits();
+renderFocusSessions();
+
+// Boost toggle initial state
+const bt = document.getElementById('boost-toggle');
+bt.className = 'toggle ' + (db.boostEnabled ? 'on' : 'off');
+</script>
+</body>
+</html>
