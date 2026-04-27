@@ -1,1469 +1,1323 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<title>DayScore AI</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-:root{
-  --bg:#0A0B0F;--bg2:#111318;--bg3:#1A1D26;--bg4:#22263A;
-  --surface:#1E2235;--surface2:#252A42;
-  --accent:#6C63FF;--accent2:#4ECDC4;--accent3:#FF6B6B;--accent4:#FFD93D;
-  --text:#F0F1F5;--text2:#9899A8;--text3:#5A5C70;
-  --green:#2ECC71;--red:#FF4757;--orange:#FFA502;--blue:#3498DB;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
-  --shadow:0 4px 24px rgba(0,0,0,0.4);
-  --r:16px;--r2:12px;--r3:8px;
-  font-family:'Space Grotesk',sans-serif;
-}
-body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
-.app{display:flex;flex-direction:column;min-height:100vh;max-width:480px;margin:0 auto;position:relative;}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0;position:sticky;top:0;z-index:100;background:linear-gradient(var(--bg) 80%,transparent);}
-.logo{font-size:18px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.icon-btn{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all 0.2s;}
-.icon-btn:hover{background:var(--surface2);}
-.nav{display:flex;background:var(--bg2);border-top:1px solid var(--border);padding:8px 4px;position:sticky;bottom:0;z-index:100;}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 4px;border-radius:var(--r3);transition:all 0.2s;}
-.nav-item.active .nav-icon{color:var(--accent);}
-.nav-icon{font-size:20px;transition:transform 0.2s;}
-.nav-item:hover .nav-icon{transform:scale(1.15);}
-.nav-label{font-size:10px;color:var(--text3);font-weight:500;}
-.nav-item.active .nav-label{color:var(--accent);}
-.page{display:none;flex-direction:column;gap:16px;padding:16px 16px 8px;flex:1;}
-.page.active{display:flex;}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;transition:border-color 0.2s;}
-.card:hover{border-color:var(--border2);}
-.card-sm{padding:12px;}
-.card-title{font-size:12px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;}
-.score-hero{background:linear-gradient(135deg,#1a1b35 0%,#1E2235 50%,#1a2230 100%);border:1px solid var(--border2);border-radius:var(--r);padding:20px;position:relative;overflow:hidden;}
-.score-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(108,99,255,0.15) 0%,transparent 70%);}
-.score-hero::after{content:'';position:absolute;bottom:-60px;left:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(78,205,196,0.1) 0%,transparent 70%);}
-.score-date{font-size:12px;color:var(--text2);}
-.score-display{display:flex;align-items:flex-end;gap:8px;margin:8px 0;}
-.score-num{font-size:56px;font-weight:700;line-height:1;background:linear-gradient(135deg,#fff 0%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;transition:all 0.3s;}
-.score-max{font-size:18px;color:var(--text3);margin-bottom:8px;}
-.score-label{font-size:13px;color:var(--accent2);}
-.score-bar{width:100%;height:6px;background:var(--bg4);border-radius:3px;margin:12px 0 8px;overflow:hidden;}
-.score-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.8s ease;}
-.score-meta{display:flex;gap:16px;}
-.score-stat{text-align:center;}
-.score-stat-val{font-size:18px;font-weight:600;}
-.score-stat-lbl{font-size:10px;color:var(--text3);}
-.xp-bar-wrap{margin-top:10px;}
-.xp-header{display:flex;justify-content:space-between;margin-bottom:4px;}
-.xp-level{font-size:12px;font-weight:600;color:var(--accent4);}
-.xp-val{font-size:11px;color:var(--text3);}
-.xp-bar{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;}
-.xp-fill{height:100%;background:linear-gradient(90deg,var(--accent4),#FF9F43);transition:width 0.8s ease;}
-.streak-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,107,107,0.15);border:1px solid rgba(255,107,107,0.3);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;color:#FF6B6B;}
-.app-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
-.app-row:last-child{border-bottom:none;}
-.app-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
-.app-info{flex:1;min-width:0;}
-.app-name{font-size:14px;font-weight:500;}
-.app-time{font-size:12px;color:var(--text2);}
-.app-bar-wrap{width:80px;flex-shrink:0;}
-.app-mini-bar{height:4px;border-radius:2px;margin-bottom:4px;}
-.app-weight{font-size:11px;font-weight:600;text-align:right;}
-.app-mode-tag{font-size:9px;padding:2px 6px;border-radius:20px;font-weight:500;display:inline-block;margin-top:2px;}
-.tabs{display:flex;background:var(--bg3);border-radius:var(--r2);padding:3px;gap:2px;}
-.tab{flex:1;padding:7px 4px;text-align:center;font-size:12px;font-weight:500;border-radius:10px;cursor:pointer;color:var(--text2);transition:all 0.2s;}
-.tab.active{background:var(--surface2);color:var(--text);}
-.insight-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:12px;display:flex;gap:10px;align-items:flex-start;}
-.insight-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
-.insight-text{font-size:13px;color:var(--text2);line-height:1.5;}
-.insight-text strong{color:var(--text);}
-.insight-tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;margin-top:6px;}
-.focus-hero{background:linear-gradient(135deg,#0d1f2d,#1a2840);border:1px solid rgba(52,152,219,0.25);border-radius:var(--r);padding:20px;text-align:center;}
-.focus-timer{font-size:52px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent2);letter-spacing:-2px;}
-.focus-btn{width:100%;padding:14px;border-radius:var(--r2);border:none;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Space Grotesk',sans-serif;margin-top:12px;}
-.focus-btn.start{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
-.focus-btn.stop{background:rgba(255,71,87,0.15);border:1px solid rgba(255,71,87,0.3);color:var(--red);}
-.focus-btn:hover{opacity:0.9;transform:translateY(-1px);}
-.focus-boost{display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);border-radius:var(--r2);}
-.toggle{width:40px;height:22px;background:var(--accent);border-radius:11px;cursor:pointer;position:relative;transition:background 0.3s;}
-.toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform 0.3s;}
-.toggle.off{background:var(--bg4);}
-.toggle.off::after{transform:none;}
-.toggle.on::after{transform:translateX(18px);}
-.weight-slider{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer;}
-.weight-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;}
-.tag-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.tag-btn{padding:14px 8px;border-radius:var(--r2);border:1px solid var(--border2);background:var(--surface);font-size:13px;font-weight:500;color:var(--text);cursor:pointer;text-align:center;transition:all 0.2s;display:flex;flex-direction:column;gap:4px;align-items:center;}
-.tag-btn:hover,.tag-btn.selected{border-color:var(--accent);background:rgba(108,99,255,0.1);color:var(--accent);}
-.tag-emoji{font-size:24px;}
-.achievement{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
-.ach-icon{font-size:28px;width:44px;text-align:center;}
-.ach-info{flex:1;}
-.ach-name{font-size:13px;font-weight:600;}
-.ach-desc{font-size:11px;color:var(--text3);}
-.ach-locked{opacity:0.35;filter:grayscale(1);}
-.timeline-row{display:flex;gap:8px;align-items:center;padding:5px 0;}
-.tl-time{font-size:10px;color:var(--text3);width:38px;flex-shrink:0;font-family:'DM Mono',monospace;}
-.tl-bar{flex:1;height:24px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:500;}
-.session-popup{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r) var(--r) 0 0;padding:20px;z-index:200;transition:transform 0.3s ease;transform:translateX(-50%) translateY(100%);}
-.session-popup.show{transform:translateX(-50%) translateY(0);}
-.popup-handle{width:36px;height:3px;background:var(--text3);border-radius:2px;margin:0 auto 16px;}
-.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;}
-canvas{max-width:100%;}
-@keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
-@keyframes glow{0%,100%{box-shadow:0 0 0 rgba(108,99,255,0)}50%{box-shadow:0 0 20px rgba(108,99,255,0.3)}}
-@keyframes scoreUp{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
-.page.active .card{animation:fadeInUp 0.3s ease both;}
-.page.active .card:nth-child(2){animation-delay:0.05s;}
-.page.active .card:nth-child(3){animation-delay:0.1s;}
-.page.active .card:nth-child(4){animation-delay:0.15s;}
-.recording-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 1.5s ease infinite;}
-.row{display:flex;gap:10px;}
-.row>.card{flex:1;}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.scroll-y{overflow-y:auto;max-height:260px;}
-.scroll-y::-webkit-scrollbar{width:3px;}
-.scroll-y::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-.btn{padding:10px 16px;border-radius:var(--r3);border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all 0.2s;}
-.btn-primary{background:var(--accent);color:#fff;}
-.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
-.btn:hover{opacity:0.85;}
-.notif{background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.25);border-radius:var(--r2);padding:10px 12px;display:flex;gap:8px;align-items:center;font-size:12px;color:#FF8A8A;}
-.notif.hidden{display:none;}
+  :root {
+    --bg: #0f0f11;
+    --bg2: #16161a;
+    --bg3: #1e1e24;
+    --bg4: #26262e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0efe8;
+    --text2: #9896a4;
+    --text3: #5f5d6b;
+    --green: #5eead4;
+    --green-dim: rgba(94,234,212,0.12);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.12);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.12);
+    --blue: #818cf8;
+    --blue-dim: rgba(129,140,248,0.12);
+    --purple: #c084fc;
+    --purple-dim: rgba(192,132,252,0.12);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
-/* Live tracking indicator */
-.live-indicator{display:flex;align-items:center;gap:5px;}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease infinite;}
+  /* ═══════════════════ LOGIN SCREEN ═══════════════════ */
+  #login-screen {
+    position: fixed; inset: 0; background: var(--bg); z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .login-card {
+    width: 100%; max-width: 420px;
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 20px; padding: 40px 36px;
+    animation: fadeSlideUp 0.5s cubic-bezier(0.34,1.1,0.64,1) both;
+  }
+  @keyframes fadeSlideUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
 
-/* App input form */
-.app-input-form{display:flex;flex-direction:column;gap:10px;}
-.app-input-form input,.app-input-form select{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r3);padding:10px 12px;color:var(--text);font-size:13px;font-family:'Space Grotesk',sans-serif;width:100%;}
-.app-input-form input::placeholder{color:var(--text3);}
+  .login-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px; letter-spacing: -0.03em;
+    margin-bottom: 6px;
+  }
+  .login-logo span { color: var(--green); }
+  .login-tagline { font-size: 13px; color: var(--text3); margin-bottom: 32px; }
 
-/* Toast */
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r2);padding:10px 18px;font-size:13px;font-weight:500;z-index:999;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;}
-.toast.show{transform:translateX(-50%) translateY(0);}
+  /* tabs */
+  .login-tabs { display: flex; background: var(--bg3); border-radius: 10px; padding: 3px; margin-bottom: 24px; }
+  .login-tab { flex: 1; padding: 9px; text-align: center; font-size: 13px; font-weight: 500; border-radius: 8px; cursor: pointer; color: var(--text2); transition: all 0.15s; border: none; background: none; font-family: 'DM Sans', sans-serif; }
+  .login-tab.active { background: var(--bg4); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
 
-/* Score change flash */
-.score-change{font-size:13px;font-weight:700;position:absolute;right:20px;top:20px;opacity:0;transition:all 0.5s;}
-.score-change.up{color:var(--green);}
-.score-change.down{color:var(--red);}
-.score-change.anim{opacity:1;transform:translateY(-8px);}
+  .login-form { display: flex; flex-direction: column; gap: 14px; }
+  .login-form-group { display: flex; flex-direction: column; gap: 6px; }
+  .login-label { font-size: 12px; font-weight: 500; color: var(--text2); }
+  .login-input {
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    padding: 11px 14px; width: 100%; outline: none;
+    transition: border-color 0.15s;
+  }
+  .login-input:focus { border-color: var(--green); }
+  .login-input::placeholder { color: var(--text3); }
 
-/* Stats row */
-.stats-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;}
-.stat-chip{flex-shrink:0;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:10px 14px;text-align:center;}
-.stat-chip-val{font-size:20px;font-weight:700;}
-.stat-chip-lbl{font-size:10px;color:var(--text3);margin-top:2px;}
+  .login-btn {
+    padding: 12px; border-radius: var(--radius-sm); font-size: 14px;
+    font-weight: 600; cursor: pointer; transition: all 0.15s;
+    background: var(--green); color: #0f0f11; border: none;
+    font-family: 'DM Sans', sans-serif; margin-top: 4px;
+    letter-spacing: 0.01em;
+  }
+  .login-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .login-btn:active { transform: none; }
+  .login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-/* Progress ring */
-.progress-ring-wrap{position:relative;width:80px;height:80px;flex-shrink:0;}
-.progress-ring-wrap svg{transform:rotate(-90deg);}
-.ring-bg{fill:none;stroke:var(--bg4);stroke-width:6;}
-.ring-fill{fill:none;stroke:url(#ringGrad);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 0.8s ease;}
-.ring-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
-.ring-num{font-size:18px;font-weight:700;line-height:1;}
-.ring-lbl{font-size:9px;color:var(--text3);}
+  .login-error {
+    padding: 11px 14px; background: var(--red-dim);
+    border: 1px solid rgba(248,113,113,0.25);
+    border-radius: var(--radius-sm); font-size: 13px;
+    color: var(--red); display: none; line-height: 1.5;
+  }
+
+  .login-divider {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 12px; color: var(--text3); margin: 4px 0;
+  }
+  .login-divider::before, .login-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .login-footer { margin-top: 20px; text-align: center; font-size: 12px; color: var(--text3); line-height: 1.6; }
+  .login-footer a { color: var(--green); text-decoration: none; }
+
+  /* Cloud status pill */
+  .cloud-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 12px;
+    font-size: 11px; font-weight: 500; color: var(--text2);
+    cursor: pointer; transition: all 0.15s;
+    font-family: 'DM Mono', monospace;
+  }
+  .cloud-status:hover { border-color: var(--border2); color: var(--text); }
+  .cloud-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); transition: background 0.3s; }
+  .cloud-dot.synced { background: var(--green); }
+  .cloud-dot.syncing { background: var(--amber); animation: pulse-dot 1s ease-in-out infinite; }
+  .cloud-dot.error { background: var(--red); }
+  @keyframes pulse-dot { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+  /* NAV */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(15,15,17,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 60px; }
+  .nav-logo { font-family: 'DM Serif Display', serif; font-size: 18px; letter-spacing: -0.02em; }
+  .nav-logo span { color: var(--green); }
+  .nav-tabs { display: flex; gap: 2px; }
+  .nav-tab { padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); transition: all 0.15s; border: none; background: none; }
+  .nav-tab.active { background: var(--bg3); color: var(--text); }
+  .nav-tab:hover:not(.active) { color: var(--text); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .nav-date { font-size: 12px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+  /* user chip */
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 12px 5px 8px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .user-chip:hover { border-color: var(--border2); }
+  .user-avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--green-dim); border: 1px solid rgba(94,234,212,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--green);
+  }
+  .user-name { font-size: 12px; font-weight: 500; color: var(--text); }
+
+  /* user dropdown */
+  .user-dropdown {
+    position: absolute; top: 56px; right: 24px;
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); padding: 6px;
+    min-width: 180px; display: none; z-index: 200;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .user-dropdown.open { display: block; animation: fadeSlideUp 0.15s ease both; }
+  .dropdown-item {
+    padding: 9px 12px; border-radius: 6px; font-size: 13px;
+    cursor: pointer; color: var(--text2); transition: all 0.1s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dropdown-item:hover { background: var(--bg3); color: var(--text); }
+  .dropdown-item.danger { color: var(--red); }
+  .dropdown-item.danger:hover { background: var(--red-dim); }
+  .dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* LAYOUT */
+  main { padding: 80px 24px 40px; max-width: 900px; margin: 0 auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* PAGE HEADER */
+  .page-header { margin-bottom: 28px; }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 32px; letter-spacing: -0.03em; margin-bottom: 4px; }
+  .page-sub { font-size: 14px; color: var(--text2); }
+
+  /* CARDS */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; }
+
+  /* GRID */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media(max-width: 600px) { .grid4 { grid-template-columns: 1fr 1fr; } .grid2 { grid-template-columns: 1fr; } .grid3 { grid-template-columns: 1fr; } }
+
+  /* BUTTONS */
+  .btn { padding: 10px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-family: 'DM Sans', sans-serif; }
+  .btn:hover { background: var(--bg4); }
+  .btn-green { background: var(--green); color: #0f0f11; border-color: var(--green); font-weight: 600; }
+  .btn-green:hover { opacity: 0.9; }
+  .btn-red { background: var(--red-dim); color: var(--red); border-color: rgba(248,113,113,0.25); }
+  .btn-sm { padding: 7px 14px; font-size: 12px; }
+
+  /* INPUTS */
+  input[type=text], input[type=number], textarea, select {
+    background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 10px 14px;
+    width: 100%; outline: none; transition: border-color 0.15s;
+  }
+  input[type=text]:focus, input[type=number]:focus, textarea:focus { border-color: var(--green); }
+  textarea { resize: vertical; line-height: 1.7; }
+  input[type=range] { width: 100%; accent-color: var(--green); cursor: pointer; }
+
+  /* STAT CHIP */
+  .stat { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; }
+  .stat-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+  .stat-val { font-size: 24px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .stat-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  /* PROGRESS BAR */
+  .pbar { height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden; }
+  .pbar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+
+  /* PILLAR ROW */
+  .pillar-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .pillar-row:last-child { border-bottom: none; }
+  .pillar-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .pillar-name { font-size: 14px; font-weight: 500; min-width: 100px; }
+  .pillar-slider { flex: 1; }
+  .pillar-val { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text2); min-width: 36px; text-align: right; }
+
+  /* BALANCE METER */
+  .balance-meter { position: relative; height: 10px; border-radius: 5px; overflow: hidden; background: linear-gradient(to right, var(--red), var(--amber), var(--green), var(--amber), var(--red)); margin: 8px 0 14px; }
+  .balance-needle { position: absolute; top: -4px; width: 18px; height: 18px; background: white; border-radius: 50%; border: 2px solid var(--bg); box-shadow: 0 0 0 2px white; transition: left 0.6s cubic-bezier(0.34,1.56,0.64,1); transform: translateX(-50%); }
+  .score-big { font-family: 'DM Mono', monospace; font-size: 52px; font-weight: 500; line-height: 1; }
+
+  /* TAGS */
+  .tag { display: inline-block; font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 20px; margin: 3px; }
+
+  /* JOURNAL */
+  .entry-list { display: flex; flex-direction: column; gap: 10px; }
+  .entry-item { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; }
+  .entry-date { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-bottom: 6px; }
+  .entry-text { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 8px; }
+  .entry-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  /* AI INSIGHT */
+  .insight { background: linear-gradient(135deg, rgba(94,234,212,0.08), rgba(129,140,248,0.08)); border: 1px solid rgba(94,234,212,0.2); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 12px; }
+  .insight-icon { font-size: 20px; margin-bottom: 8px; }
+  .insight-text { font-size: 14px; line-height: 1.7; color: var(--text); }
+  .thinking { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
+  .dot-pulse { display: flex; gap: 4px; }
+  .dot-pulse span { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 1.2s ease-in-out infinite; }
+  .dot-pulse span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-pulse span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+
+  /* STAKES */
+  .goal-card { border: 1px solid var(--border2); border-radius: var(--radius); padding: 20px; background: var(--bg2); position: relative; overflow: hidden; }
+  .goal-card.danger { border-color: rgba(248,113,113,0.3); background: linear-gradient(135deg, var(--bg2), rgba(248,113,113,0.05)); }
+  .goal-card.safe { border-color: rgba(94,234,212,0.3); background: linear-gradient(135deg, var(--bg2), rgba(94,234,212,0.05)); }
+  .countdown-display { font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 500; letter-spacing: 0.05em; }
+  .referee-chip { display: flex; align-items: center; gap: 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; margin: 8px 0; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--green-dim); border: 1px solid rgba(94,234,212,0.3); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--green); flex-shrink: 0; }
+  .consequence-box { background: var(--red-dim); border: 1px solid rgba(248,113,113,0.2); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: var(--red); line-height: 1.6; font-style: italic; margin-top: 8px; }
+
+  /* TOAST */
+  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 12px 18px; font-size: 13px; color: var(--text); transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 999; max-width: 320px; }
+  #toast.show { transform: translateY(0); opacity: 1; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 28px; max-width: 480px; width: 100%; }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 8px; }
+  .modal-sub { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+  .form-row { margin-bottom: 14px; }
+  .form-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+  .form-row-inline { display: flex; gap: 10px; }
+
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 48px 24px; color: var(--text3); }
+  .empty-icon { font-size: 32px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; }
+
+  /* SCROLL */
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+
+  /* STAGGER IN */
+  .fade-in { animation: fadeIn 0.4s ease both; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+  .fade-in:nth-child(1){animation-delay:0.05s} .fade-in:nth-child(2){animation-delay:0.1s} .fade-in:nth-child(3){animation-delay:0.15s} .fade-in:nth-child(4){animation-delay:0.2s} .fade-in:nth-child(5){animation-delay:0.25s}
+
+  /* Cloud config modal */
+  .cf-config { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 24px; max-width: 480px; width: 100%; }
+  .cf-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(248,140,0,0.12); border: 1px solid rgba(248,140,0,0.3); border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: #f88c00; letter-spacing: 0.05em; margin-bottom: 16px; }
 </style>
 </head>
 <body>
-<div class="app">
-  <!-- Top Bar -->
-  <div class="topbar">
-    <div class="logo">DayScore AI</div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div class="streak-badge" id="streak-badge">🔥 <span id="streak-count">0</span> day streak</div>
-      <div class="icon-btn" onclick="showSessionPopup()">＋</div>
+
+<!-- ══════════════════════════════════════════════ LOGIN SCREEN ══ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">life<span>.</span>dashboard</div>
+    <div class="login-tagline">Your life, in balance — synced to the cloud.</div>
+
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchAuthTab('signin')">Sign In</button>
+      <button class="login-tab" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+
+    <div class="login-form" id="auth-form">
+      <div class="login-form-group">
+        <div class="login-label">Username</div>
+        <input class="login-input" type="text" id="auth-username" placeholder="your_username" autocomplete="username" onkeydown="if(event.key==='Enter')authSubmit()">
+      </div>
+      <div class="login-form-group">
+        <div class="login-label">Password</div>
+        <input class="login-input" type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()">
+      </div>
+      <div class="login-form-group" id="confirm-group" style="display:none;">
+        <div class="login-label">Confirm Password</div>
+        <input class="login-input" type="password" id="auth-confirm" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSubmit()">
+      </div>
+
+      <div class="login-error" id="auth-error"></div>
+      <button class="login-btn" id="auth-btn" onclick="authSubmit()">Sign In</button>
+    </div>
+
+    <div class="login-divider">or</div>
+    <button class="login-btn" style="background:var(--bg3);color:var(--text);border:1px solid var(--border2);font-weight:500;" onclick="continueOffline()">
+      Continue without account
+    </button>
+
+    <div class="login-footer">
+      Data stored with Cloudflare Workers KV.<br>
+      <a href="#" onclick="showCFConfig()">⚙ Configure Cloudflare endpoint</a>
     </div>
   </div>
+</div>
 
-  <!-- DASHBOARD PAGE -->
-  <div class="page active" id="page-dashboard">
-
-    <!-- Notification banner (dynamic) -->
-    <div class="notif hidden" id="notif-banner">
-      ⚠️ <span id="notif-text"></span>
+<!-- Cloudflare Config Modal -->
+<div class="modal-overlay" id="cf-modal" style="display:none;" onclick="if(event.target===this)hideCFConfig()">
+  <div class="cf-config">
+    <div class="cf-badge">☁ Cloudflare Workers KV</div>
+    <div class="modal-title" style="font-size:20px;margin-bottom:6px;">Cloud Storage Config</div>
+    <div class="modal-sub">Point to your own Cloudflare Worker that wraps KV storage. <a href="https://developers.cloudflare.com/workers/runtime-apis/kv/" target="_blank" style="color:var(--green);">Learn more →</a></div>
+    <div class="form-row">
+      <div class="form-label">Worker Endpoint URL</div>
+      <input type="text" id="cf-endpoint" placeholder="https://your-worker.your-subdomain.workers.dev" style="font-family:'DM Mono',monospace;font-size:12px;">
     </div>
-
-    <!-- Score Hero -->
-    <div class="score-hero card" style="border:none;position:relative;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div class="score-date" id="score-date"></div>
-        <div class="live-indicator"><div class="live-dot"></div><span style="font-size:11px;color:var(--text3)" id="tracking-label">Tracking</span></div>
-      </div>
-      <div class="score-display">
-        <div class="score-num" id="live-score">0</div>
-        <div class="score-max">/100</div>
-      </div>
-      <div class="score-label" id="score-label">Calculating...</div>
-      <div class="score-bar"><div class="score-fill" id="score-fill" style="width:0%"></div></div>
-      <div class="score-meta">
-        <div class="score-stat"><div class="score-stat-val" id="vs-yesterday" style="color:var(--text2)">—</div><div class="score-stat-lbl">vs yesterday</div></div>
-        <div class="score-stat"><div class="score-stat-val" style="color:var(--accent)" id="weekly-avg">—</div><div class="score-stat-lbl">weekly avg</div></div>
-        <div class="score-stat"><div class="score-stat-val" style="color:var(--accent2)" id="tracked-time">0m</div><div class="score-stat-lbl">tracked today</div></div>
-      </div>
-      <div class="xp-bar-wrap">
-        <div class="xp-header">
-          <div class="xp-level" id="level-label">⚡ Level 1 · Newcomer</div>
-          <div class="xp-val" id="xp-val">0 / 500 XP</div>
-        </div>
-        <div class="xp-bar"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
-      </div>
-      <div class="score-change" id="score-change"></div>
+    <div class="form-row">
+      <div class="form-label">API Token (optional, for auth)</div>
+      <input type="text" id="cf-token" placeholder="Bearer token or leave blank if worker is open">
     </div>
-
-    <!-- Focus Score Boost Mode -->
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div>
-          <div style="font-size:14px;font-weight:600;color:var(--accent)">⚡ Focus Score Boost Mode</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px;">Amplifies productive apps · Penalizes distractions 2×</div>
-        </div>
-        <div class="toggle" id="boost-toggle" onclick="toggleBoost()"></div>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <div style="flex:1;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);border-radius:var(--r3);padding:8px;text-align:center;">
-          <div style="font-size:16px;font-weight:700;color:var(--green)">+1.5×</div>
-          <div style="font-size:10px;color:var(--text3)">Productive weight</div>
-        </div>
-        <div style="flex:1;background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.2);border-radius:var(--r3);padding:8px;text-align:center;">
-          <div style="font-size:16px;font-weight:700;color:var(--red)">−2×</div>
-          <div style="font-size:10px;color:var(--text3)">Distraction penalty</div>
-        </div>
-        <div style="flex:1;background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.2);border-radius:var(--r3);padding:8px;text-align:center;">
-          <div style="font-size:16px;font-weight:700;color:var(--accent)" id="boost-hours">Off</div>
-          <div style="font-size:10px;color:var(--text3)">Boost status</div>
-        </div>
-      </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.8;">
+      <strong style="color:var(--text);display:block;margin-bottom:6px;">Expected Worker API:</strong>
+      <code style="color:var(--green);">GET  /kv/:key</code> → returns value<br>
+      <code style="color:var(--green);">PUT  /kv/:key</code> → body = value<br>
+      <code style="color:var(--green);">DEL  /kv/:key</code> → deletes key<br>
+      <span style="color:var(--text3);font-size:11px;">Keys are namespaced per user: <code>user:{username}:{dataKey}</code></span>
     </div>
-
-    <!-- Log App Usage (REAL) -->
-    <div class="card">
-      <div class="card-title">➕ Log App Usage</div>
-      <div class="app-input-form">
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="log-app-name" placeholder="App name (e.g. Notion, YouTube)" style="flex:1;">
-          <input type="number" id="log-app-mins" placeholder="Min" style="width:70px;" min="1" max="720">
-        </div>
-        <div style="display:flex;gap:8px;">
-          <select id="log-app-mode" style="flex:1;">
-            <option value="work">💼 Work</option>
-            <option value="study">📚 Study</option>
-            <option value="entertainment">🎮 Entertainment</option>
-            <option value="timepass">☕ Timepass</option>
-          </select>
-          <button class="btn btn-primary" onclick="logAppUsage()" style="flex-shrink:0;">Log</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Today's App Usage (dynamic) -->
-    <div class="card">
-      <div class="card-title">Today's App Usage</div>
-      <div class="scroll-y" id="app-usage-list">
-        <div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">No apps logged yet. Add your first session above!</div>
-      </div>
-    </div>
-
-    <!-- AI Insights (dynamic) -->
-    <div class="card">
-      <div class="card-title">🤖 AI Insights</div>
-      <div id="insights-container" style="display:flex;flex-direction:column;gap:8px;">
-        <div class="insight-card">
-          <div class="insight-icon">💡</div>
-          <div><div class="insight-text">Log your first app session to get personalized insights.</div></div>
-        </div>
-      </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-green" style="flex:1" onclick="saveCFConfig()">Save Config</button>
+      <button class="btn" onclick="hideCFConfig()">Cancel</button>
     </div>
   </div>
+</div>
 
-  <!-- CHARTS PAGE -->
-  <div class="page" id="page-charts">
-    <div class="tabs">
-      <div class="tab active" onclick="setChartTab('daily',this)">Daily</div>
-      <div class="tab" onclick="setChartTab('weekly',this)">Weekly</div>
-      <div class="tab" onclick="setChartTab('monthly',this)">Monthly</div>
+<!-- ══════════════════════════════════════════════ APP ══ -->
+<div id="app" style="display:none;">
+
+<nav>
+  <div class="nav-logo">life<span>.</span>dashboard</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showPage('journal')">Reflect</button>
+    <button class="nav-tab" onclick="showPage('stakes')">Stakes</button>
+  </div>
+  <div class="nav-right">
+    <div class="cloud-status" id="cloud-pill" onclick="showSyncStatus()" title="Cloud sync status">
+      <div class="cloud-dot" id="cloud-dot"></div>
+      <span id="cloud-label">offline</span>
     </div>
-    <div class="card">
-      <div class="card-title">Productivity Score Trend</div>
-      <div style="position:relative;height:180px;"><canvas id="scoreChart"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">App Usage Breakdown</div>
-      <div style="display:flex;gap:12px;align-items:center;">
-        <div style="position:relative;width:130px;height:130px;flex-shrink:0;">
-          <canvas id="pieChart"></canvas>
-          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
-            <div style="font-size:11px;font-weight:700;" id="pie-center-val">0m</div>
-            <div style="font-size:9px;color:var(--text3)">total</div>
-          </div>
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:6px;" id="pie-legend"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Activity Timeline</div>
-      <div id="timeline-container" style="display:flex;flex-direction:column;gap:2px;">
-        <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">No sessions logged today.</div>
-      </div>
+    <div class="nav-date" id="nav-date"></div>
+    <div class="user-chip" id="user-chip" onclick="toggleDropdown()">
+      <div class="user-avatar" id="nav-avatar"></div>
+      <div class="user-name" id="nav-username"></div>
     </div>
   </div>
+</nav>
 
-  <!-- APPS PAGE -->
-  <div class="page" id="page-apps">
-    <div class="card">
-      <div class="card-title">App Weight Manager</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">Set how much each app affects your score (−10 to +10)</div>
-      <div class="scroll-y">
-        <div id="weight-editor"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">➕ Add Custom App</div>
-      <div class="app-input-form">
-        <input type="text" id="new-app-name" placeholder="App name (e.g. Figma)">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:12px;color:var(--text2);white-space:nowrap;">Weight:</span>
-          <input type="range" min="-10" max="10" value="5" id="new-app-weight" class="weight-slider" style="flex:1;">
-          <span style="font-size:14px;font-weight:700;min-width:28px;text-align:right;" id="new-app-weight-display">+5</span>
-        </div>
-        <button class="btn btn-primary" style="width:100%;" onclick="addCustomApp()">Add App</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">🎭 YouTube Smart Context</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">YouTube can be both productive and distracting. Set mode weights:</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);border-radius:var(--r3);">
-          <div style="display:flex;gap:8px;align-items:center;"><span>📚</span><div><div style="font-size:13px;font-weight:500;">Study Mode</div><div style="font-size:10px;color:var(--text3)">Lectures, tutorials, courses</div></div></div>
-          <div style="font-size:18px;font-weight:700;color:var(--green)">+7</div>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(255,71,87,0.08);border:1px solid rgba(255,71,87,0.2);border-radius:var(--r3);">
-          <div style="display:flex;gap:8px;align-items:center;"><span>🎮</span><div><div style="font-size:13px;font-weight:500;">Entertainment Mode</div><div style="font-size:10px;color:var(--text3)">Reels, memes, gaming</div></div></div>
-          <div style="font-size:18px;font-weight:700;color:var(--red)">−6</div>
-        </div>
-      </div>
-      <div style="margin-top:10px;font-size:11px;color:var(--text3);">🤖 AI detection: keywords like "lecture", "tutorial" → auto-mark Study. "memes", "gaming" → Entertainment.</div>
-    </div>
-    <div class="card">
-      <div class="card-title">🚫 App Limits</div>
-      <div id="app-limits-list" style="display:flex;flex-direction:column;gap:8px;"></div>
-    </div>
+<!-- user dropdown -->
+<div class="user-dropdown" id="user-dropdown">
+  <div class="dropdown-item" onclick="syncNow()">↻ &nbsp;Sync now</div>
+  <div class="dropdown-item" onclick="showCFConfig()">⚙ &nbsp;Cloud config</div>
+  <div class="dropdown-divider"></div>
+  <div class="dropdown-item danger" onclick="logout()">⎋ &nbsp;Sign out</div>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════ DASHBOARD ══ -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header fade-in">
+    <div class="page-title">Command Center</div>
+    <div class="page-sub">Your life, in balance.</div>
   </div>
 
-  <!-- FOCUS PAGE -->
-  <div class="page" id="page-focus">
-    <div class="focus-hero card" style="border:none;">
-      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Focus Session</div>
-      <div class="focus-timer" id="focus-timer">25:00</div>
-      <div style="margin-top:8px;">
-        <div style="width:100%;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;">
-          <div id="focus-progress-bar" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width 1s linear;"></div>
-        </div>
-      </div>
-      <div style="font-size:13px;color:var(--text3);margin-top:6px;" id="focus-status">Ready to start</div>
-      <button class="focus-btn start" id="focus-main-btn" onclick="toggleFocus()">▶ Start Focus Session</button>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Session Duration</div>
-      <div class="tabs">
-        <div class="tab active" onclick="setDuration(25,this)">25 min</div>
-        <div class="tab" onclick="setDuration(45,this)">45 min</div>
-        <div class="tab" onclick="setDuration(60,this)">60 min</div>
-        <div class="tab" onclick="setDuration(90,this)">90 min</div>
-      </div>
-    </div>
-
-    <div class="focus-boost" style="margin:0;border-radius:var(--r2);padding:14px;">
+  <div class="card fade-in">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap;">
       <div>
-        <div style="font-size:14px;font-weight:600;color:var(--accent)">⚡ Boost Mode During Focus</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;">Productive apps get +1.5× during focus</div>
+        <div class="card-title">Balance Score</div>
+        <div class="score-big" id="score-num" style="color:var(--green)">--</div>
+        <div id="score-label" style="font-size:14px; color:var(--text2); margin-top:4px;">Calculating...</div>
       </div>
-      <div class="toggle on" id="focus-boost-toggle" onclick="toggleFocusBoost()"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Today's Focus Sessions</div>
-      <div id="focus-sessions-list">
-        <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">No focus sessions yet today.</div>
-      </div>
-    </div>
-
-    <div class="grid2">
-      <div class="card card-sm" style="text-align:center;">
-        <div style="font-size:24px;font-weight:700;color:var(--accent2)" id="focus-session-count">0</div>
-        <div style="font-size:11px;color:var(--text3)">Sessions today</div>
-      </div>
-      <div class="card card-sm" style="text-align:center;">
-        <div style="font-size:24px;font-weight:700;color:var(--accent4)" id="focus-xp-total">+0</div>
-        <div style="font-size:11px;color:var(--text3)">XP from focus</div>
+      <div style="flex:1; min-width:200px; padding-top:4px;">
+        <div style="font-size:11px; color:var(--text3); margin-bottom:8px; letter-spacing:0.05em; text-transform:uppercase;">Balance Meter</div>
+        <div class="balance-meter"><div class="balance-needle" id="balance-needle" style="left:50%"></div></div>
+        <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text3);">
+          <span>Overloaded</span><span>Balanced</span><span>Neglected</span>
+        </div>
+        <div id="balance-warning" style="display:none; margin-top:10px; padding:10px 12px; background:var(--amber-dim); border:1px solid rgba(251,191,36,0.2); border-radius:var(--radius-sm); font-size:12px; color:var(--amber); line-height:1.5;"></div>
       </div>
     </div>
   </div>
 
-  <!-- GAMIFY PAGE -->
-  <div class="page" id="page-gamify">
-    <div class="card" style="background:linear-gradient(135deg,#1a1540,#1E2235);border-color:rgba(108,99,255,0.3);">
-      <div style="display:flex;align-items:center;gap:14px;">
-        <div id="level-badge" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0;">1</div>
-        <div style="flex:1;">
-          <div style="font-size:16px;font-weight:700;" id="level-title-gamify">Newcomer</div>
-          <div style="font-size:12px;color:var(--text3);" id="xp-to-next"></div>
-          <div class="xp-bar" style="margin-top:8px;"><div class="xp-fill" id="xp-fill-gamify" style="width:0%"></div></div>
-        </div>
+  <div class="card fade-in">
+    <div class="card-title">Today's Hours</div>
+    <div id="pillar-rows"></div>
+    <hr class="divider">
+    <div class="grid4" id="pillar-stats"></div>
+  </div>
+
+  <div class="card fade-in">
+    <div class="card-title">7-Day Snapshot</div>
+    <canvas id="weekChart" height="120" style="width:100%;"></canvas>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════ JOURNAL ══ -->
+<div class="page" id="page-journal">
+  <div class="page-header fade-in">
+    <div class="page-title">Reflect & Pivot</div>
+    <div class="page-sub">3 sentences a day. Patterns over time.</div>
+  </div>
+
+  <div class="card fade-in">
+    <div class="card-title">Today's Entry</div>
+    <textarea id="journal-input" rows="4" placeholder="Write 3 sentences about your day — what you did, how you felt, what stood out..."></textarea>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px; flex-wrap:wrap; gap:8px;">
+      <div id="char-count" style="font-size:12px; color:var(--text3);">0 words</div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-sm" onclick="analyzeEntry()">Analyze with AI</button>
+        <button class="btn btn-green btn-sm" onclick="saveEntry()">Save Entry</button>
       </div>
     </div>
-
-    <div class="grid2">
-      <div class="card card-sm" style="text-align:center;">
-        <div style="font-size:28px;font-weight:700;color:var(--accent4)" id="today-xp-gamify">+0</div>
-        <div style="font-size:11px;color:var(--text3)">XP earned today</div>
+    <div id="ai-area" style="display:none; margin-top:14px; border-top:1px solid var(--border); padding-top:14px;">
+      <div id="ai-thinking" class="thinking" style="display:none;">
+        <div class="dot-pulse"><span></span><span></span><span></span></div>
+        <span>Analyzing your entry...</span>
       </div>
-      <div class="card card-sm" style="text-align:center;">
-        <div style="font-size:28px;font-weight:700;color:var(--red)">🔥 <span id="streak-gamify">0</span></div>
-        <div style="font-size:11px;color:var(--text3)">day streak</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Achievements</div>
-      <div id="achievements-list"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">This Week's Scores</div>
-      <div style="position:relative;height:150px;"><canvas id="weekChart"></canvas></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">All-Time Stats</div>
-      <div class="grid2" style="margin-top:4px;">
-        <div style="background:var(--bg3);border-radius:var(--r3);padding:12px;text-align:center;">
-          <div style="font-size:20px;font-weight:700;color:var(--accent)" id="stat-total-xp">0</div>
-          <div style="font-size:10px;color:var(--text3)">Total XP</div>
+      <div id="ai-result" style="display:none;">
+        <div class="insight">
+          <div class="insight-icon">✦</div>
+          <div class="insight-text" id="ai-text"></div>
         </div>
-        <div style="background:var(--bg3);border-radius:var(--r3);padding:12px;text-align:center;">
-          <div style="font-size:20px;font-weight:700;color:var(--accent2)" id="stat-best-score">0</div>
-          <div style="font-size:10px;color:var(--text3)">Best Score</div>
-        </div>
-        <div style="background:var(--bg3);border-radius:var(--r3);padding:12px;text-align:center;">
-          <div style="font-size:20px;font-weight:700;color:var(--accent4)" id="stat-total-sessions">0</div>
-          <div style="font-size:10px;color:var(--text3)">Total Sessions</div>
-        </div>
-        <div style="background:var(--bg3);border-radius:var(--r3);padding:12px;text-align:center;">
-          <div style="font-size:20px;font-weight:700;color:var(--green)" id="stat-focus-count">0</div>
-          <div style="font-size:10px;color:var(--text3)">Focus Sessions</div>
-        </div>
+        <div id="ai-tags" style="margin-top:8px;"></div>
       </div>
     </div>
   </div>
 
-  <!-- Nav -->
-  <div class="nav">
-    <div class="nav-item active" onclick="goPage('dashboard',this)">
-      <div class="nav-icon">📊</div><div class="nav-label">Dashboard</div>
+  <div class="card fade-in" id="recap-card" style="display:none;">
+    <div class="card-title">Monthly Insight</div>
+    <div id="recap-content"></div>
+  </div>
+
+  <div class="card fade-in">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+      <div class="card-title" style="margin-bottom:0;">Past Entries</div>
+      <button class="btn btn-sm" onclick="generateRecap()" id="recap-btn" style="display:none;">Generate Monthly Recap</button>
     </div>
-    <div class="nav-item" onclick="goPage('charts',this)">
-      <div class="nav-icon">📈</div><div class="nav-label">Charts</div>
+    <div id="entries-list"><div class="empty"><div class="empty-icon">📓</div><div class="empty-text">Your first entry will appear here</div></div></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════ STAKES ══ -->
+<div class="page" id="page-stakes">
+  <div class="page-header fade-in">
+    <div class="page-title">Commitment Stakes</div>
+    <div class="page-sub">Set a goal. Face consequences.</div>
+  </div>
+
+  <div style="margin-bottom:16px;" class="fade-in">
+    <button class="btn btn-green" onclick="showNewGoal()">+ New Commitment</button>
+  </div>
+
+  <div id="goals-list" class="fade-in"></div>
+</div>
+
+</main>
+
+<!-- NEW GOAL MODAL -->
+<div class="modal-overlay" id="goal-modal" style="display:none;" onclick="if(event.target===this)hideModal()">
+  <div class="modal">
+    <div class="modal-title">New Commitment</div>
+    <div class="modal-sub">Set a goal with real stakes.</div>
+    <div class="form-row">
+      <div class="form-label">Your commitment</div>
+      <input type="text" id="g-goal" placeholder="e.g. Finish 5 LeetCode problems">
     </div>
-    <div class="nav-item" onclick="goPage('apps',this)">
-      <div class="nav-icon">⚙️</div><div class="nav-label">Apps</div>
+    <div class="form-row form-row-inline">
+      <div style="flex:1">
+        <div class="form-label">Deadline (minutes from now)</div>
+        <input type="number" id="g-hours" value="60" min="1" max="43200">
+      </div>
+      <div style="flex:1">
+        <div class="form-label">Proof type</div>
+        <select id="g-proof">
+          <option value="screenshot">Screenshot</option>
+          <option value="link">GitHub / URL link</option>
+          <option value="note">Written note</option>
+        </select>
+      </div>
     </div>
-    <div class="nav-item" onclick="goPage('focus',this)">
-      <div class="nav-icon">🎯</div><div class="nav-label">Focus</div>
+    <div class="form-row">
+      <div class="form-label">Referee's name</div>
+      <input type="text" id="g-referee" placeholder="e.g. Arjun K.">
     </div>
-    <div class="nav-item" onclick="goPage('gamify',this)">
-      <div class="nav-icon">🏆</div><div class="nav-label">Rewards</div>
+    <div class="form-row">
+      <div class="form-label">Shame message (sent if you fail)</div>
+      <textarea id="g-message" rows="3" placeholder="e.g. Hey, I set a goal and didn't follow through. Hold me accountable!"></textarea>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:6px;">
+      <button class="btn btn-green" style="flex:1" onclick="createGoal()">Lock In Commitment</button>
+      <button class="btn" onclick="hideModal()">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- Session Popup -->
-<div class="session-popup" id="session-popup">
-  <div class="popup-handle"></div>
-  <div style="font-size:16px;font-weight:600;margin-bottom:4px;">Starting a new session?</div>
-  <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">Tag your purpose to get accurate productivity scores.</div>
-  <div class="tag-grid">
-    <div class="tag-btn" onclick="selectTag(this,'study')"><div class="tag-emoji">📚</div><div style="font-size:13px;font-weight:600;">Study</div><div style="font-size:10px;color:var(--text3)">+7 weight</div></div>
-    <div class="tag-btn" onclick="selectTag(this,'work')"><div class="tag-emoji">💼</div><div style="font-size:13px;font-weight:600;">Work</div><div style="font-size:10px;color:var(--text3)">+6 weight</div></div>
-    <div class="tag-btn" onclick="selectTag(this,'entertainment')"><div class="tag-emoji">🎮</div><div style="font-size:13px;font-weight:600;">Entertainment</div><div style="font-size:10px;color:var(--text3)">−4 weight</div></div>
-    <div class="tag-btn" onclick="selectTag(this,'timepass')"><div class="tag-emoji">☕</div><div style="font-size:13px;font-weight:600;">Timepass</div><div style="font-size:10px;color:var(--text3)">−6 weight</div></div>
+<!-- PROOF MODAL -->
+<div class="modal-overlay" id="proof-modal" style="display:none;" onclick="if(event.target===this)hideModal2()">
+  <div class="modal">
+    <div class="modal-title">Submit Proof</div>
+    <div class="modal-sub" id="proof-modal-sub">Paste your link or describe your evidence.</div>
+    <div class="form-row">
+      <textarea id="proof-input" rows="4" placeholder="Paste GitHub link, screenshot URL, or describe what you completed..."></textarea>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-green" style="flex:1" onclick="submitProof()">Mark Complete ✓</button>
+      <button class="btn" onclick="hideModal2()">Cancel</button>
+    </div>
   </div>
-  <div style="margin-top:14px;">
-    <input type="text" id="popup-app-name" placeholder="App name (optional)" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r3);padding:10px 12px;color:var(--text);font-size:13px;font-family:'Space Grotesk',sans-serif;width:100%;">
-  </div>
-  <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="startSession()">Confirm & Start Tracking</button>
-  <button class="btn btn-ghost" style="width:100%;margin-top:8px;" onclick="hideSessionPopup()">Cancel</button>
 </div>
 
-<!-- Toast -->
-<div class="toast" id="toast"></div>
+</div><!-- #app -->
+
+<div id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════
-//  BACKEND — Data Models & localStorage Engine
-// ═══════════════════════════════════════════════
-
-const DB_KEY = 'dayscore_v2';
-
-const DEFAULT_APPS = [
-  {name:'Notion',   icon:'📝', color:'#4ECDC4', weight:8,  limit:null},
-  {name:'Chrome',   icon:'🌐', color:'#3498DB', weight:5,  limit:120},
-  {name:'YouTube',  icon:'▶️',  color:'#FF4757', weight:2,  limit:60},
-  {name:'Instagram',icon:'📸', color:'#FF6B6B', weight:-7, limit:30},
-  {name:'Slack',    icon:'💬', color:'#FFD93D', weight:4,  limit:null},
-  {name:'TikTok',   icon:'🎵', color:'#FF6B6B', weight:-8, limit:20},
-  {name:'Twitter',  icon:'🐦', color:'#1DA1F2', weight:-5, limit:30},
-  {name:'Spotify',  icon:'🎧', color:'#1DB954', weight:-2, limit:null},
-  {name:'VS Code',  icon:'💻', color:'#007ACC', weight:9,  limit:null},
-  {name:'Figma',    icon:'🎨', color:'#A259FF', weight:8,  limit:null},
-];
-
-const LEVEL_THRESHOLDS = [0,500,1200,2200,3500,5200,7500,10000,13500,18000,24000,32000,42000,55000,70000,90000];
-const LEVEL_TITLES = ['Newcomer','Beginner','Explorer','Learner','Achiever','Focused Achiever','Dedicated','Driven','Expert','Master','Elite','Legend','Grandmaster','Champion','Titan','Ultimate'];
-
-const ACHIEVEMENTS = [
-  {id:'first_log',    icon:'🎯', name:'First Strike',    desc:'Log your first app session',         check: s => s.allTimeSessions >= 1},
-  {id:'score_70',     icon:'⭐', name:'Productive Day',  desc:'Score 70+ in a single day',          check: s => s.bestScore >= 70},
-  {id:'score_90',     icon:'🌟', name:'Peak Performance',desc:'Score 90+ in a single day',          check: s => s.bestScore >= 90},
-  {id:'score_100',    icon:'🏆', name:'Centurion',        desc:'Score 100 in a single day',          check: s => s.bestScore >= 100},
-  {id:'week_streak',  icon:'🔥', name:'Week Warrior',    desc:'7-day productivity streak',          check: s => s.streak >= 7},
-  {id:'month_streak', icon:'🌙', name:'Night Owl',       desc:'30-day streak',                      check: s => s.streak >= 30},
-  {id:'focus_5',      icon:'⚡', name:'Boost Master',    desc:'Complete 5 focus sessions',          check: s => s.totalFocusSessions >= 5},
-  {id:'focus_20',     icon:'🧘', name:'Zen Mode',        desc:'Complete 20 focus sessions',         check: s => s.totalFocusSessions >= 20},
-  {id:'xp_1000',      icon:'💎', name:'XP Collector',   desc:'Earn 1,000 total XP',               check: s => s.totalXp >= 1000},
-  {id:'xp_10000',     icon:'👑', name:'XP King',         desc:'Earn 10,000 total XP',              check: s => s.totalXp >= 10000},
-  {id:'sessions_50',  icon:'🎓', name:'Scholar',         desc:'Log 50 app sessions',               check: s => s.allTimeSessions >= 50},
-];
-
-function loadDB() {
-  try {
-    const raw = localStorage.getItem(DB_KEY);
-    if (!raw) return createFreshDB();
-    return JSON.parse(raw);
-  } catch(e) { return createFreshDB(); }
-}
-
-function saveDB(db) {
-  try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch(e) {}
-}
-
-function createFreshDB() {
-  return {
-    apps: DEFAULT_APPS,
-    days: {},           // { 'YYYY-MM-DD': { sessions: [], score: 0, xpEarned: 0 } }
-    totalXp: 0,
-    streak: 0,
-    lastActiveDate: null,
-    bestScore: 0,
-    allTimeSessions: 0,
-    totalFocusSessions: 0,
-    boostEnabled: false,
-    focusBoostEnabled: true,
-    unlockedAchievements: [],
-    focusSessions: [],  // all-time focus sessions
-  };
-}
-
-// ═══════════════════════════════════════════════
-//  DATE HELPERS
-// ═══════════════════════════════════════════════
-
-function todayKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-
-function getOrCreateDay(db, key) {
-  if (!db.days[key]) db.days[key] = { sessions:[], score:0, xpEarned:0, focusSessions:[] };
-  return db.days[key];
-}
-
-function formatTime(mins) {
-  if (mins < 60) return `${mins}m`;
-  return `${Math.floor(mins/60)}h ${mins%60}m`;
-}
-
-function formatDate() {
-  const d = new Date();
-  return d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}) + ' · Live';
-}
-
-// ═══════════════════════════════════════════════
-//  SCORE ENGINE
-// ═══════════════════════════════════════════════
-
-function getAppConfig(db, name) {
-  const lower = name.toLowerCase();
-  return db.apps.find(a => a.name.toLowerCase() === lower) || { weight: 0, color: '#9899A8', icon: '📱', limit: null };
-}
-
-function getModeMultiplier(mode) {
-  const m = { work:1.2, study:1.15, entertainment:0.6, timepass:0.4 };
-  return m[mode] || 1;
-}
-
-function computeScore(db, dayData) {
-  if (!dayData || !dayData.sessions || dayData.sessions.length === 0) return 0;
-
-  let rawScore = 0;
-  let totalMins = 0;
-
-  for (const sess of dayData.sessions) {
-    const cfg = getAppConfig(db, sess.app);
-    let w = cfg.weight;
-    const modeM = getModeMultiplier(sess.mode);
-
-    // Boost mode logic
-    if (db.boostEnabled) {
-      if (w > 0) w *= 1.5;
-      else w *= 2;
-    }
-
-    // Mode multiplier
-    w *= modeM;
-
-    // Time contribution (normalized per 60 mins)
-    const timeContrib = (sess.mins / 60);
-    rawScore += w * timeContrib;
-    totalMins += sess.mins;
-  }
-
-  // Normalize to 0–100 scale
-  // Base: max possible score with all productive apps is about +20/hr
-  const hoursTracked = totalMins / 60;
-  const maxPossible = Math.max(hoursTracked * 15, 10);
-  let score = 50 + (rawScore / maxPossible) * 50;
-  score = Math.max(0, Math.min(100, Math.round(score)));
-  return score;
-}
-
-function scoreToLabel(s) {
-  if (s >= 90) return 'Legendary 🌟';
-  if (s >= 80) return 'Excellent 🚀';
-  if (s >= 70) return 'Highly Productive 💪';
-  if (s >= 55) return 'On Track 👍';
-  if (s >= 40) return 'Moderate ⚡';
-  if (s >= 25) return 'Low Activity 😐';
-  return 'Getting Started 🌱';
-}
-
-function scoreToXP(score, mins) {
-  const base = Math.round(score * 0.5 + (mins / 10));
-  return Math.max(1, base);
-}
-
-function getLevelInfo(totalXp) {
-  let level = 1;
-  for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
-    if (totalXp >= LEVEL_THRESHOLDS[i]) { level = i + 1; break; }
-  }
-  level = Math.min(level, LEVEL_THRESHOLDS.length);
-  const currentThresh = LEVEL_THRESHOLDS[level - 1] || 0;
-  const nextThresh = LEVEL_THRESHOLDS[level] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
-  const pct = nextThresh > currentThresh ? Math.round((totalXp - currentThresh) / (nextThresh - currentThresh) * 100) : 100;
-  return { level, title: LEVEL_TITLES[level-1] || 'Ultimate', currentXp: totalXp - currentThresh, nextXp: nextThresh - currentThresh, pct };
-}
-
-// ═══════════════════════════════════════════════
-//  STREAK ENGINE
-// ═══════════════════════════════════════════════
-
-function updateStreak(db) {
-  const today = todayKey();
-  if (db.lastActiveDate === today) return; // Already counted today
-
-  const yesterday = (() => {
-    const d = new Date(); d.setDate(d.getDate() - 1);
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  })();
-
-  if (db.lastActiveDate === yesterday) {
-    db.streak++;
-  } else if (db.lastActiveDate !== today) {
-    db.streak = 1;
-  }
-  db.lastActiveDate = today;
-}
-
-// ═══════════════════════════════════════════════
-//  ACHIEVEMENT ENGINE
-// ═══════════════════════════════════════════════
-
-function checkAchievements(db) {
-  const newlyUnlocked = [];
-  for (const ach of ACHIEVEMENTS) {
-    if (!db.unlockedAchievements.includes(ach.id) && ach.check(db)) {
-      db.unlockedAchievements.push(ach.id);
-      newlyUnlocked.push(ach);
-    }
-  }
-  return newlyUnlocked;
-}
-
-// ═══════════════════════════════════════════════
-//  CORE ACTIONS
-// ═══════════════════════════════════════════════
-
-let db = loadDB();
-let selectedTag = 'work';
-let lastScore = 0;
-
-function logAppUsage() {
-  const nameEl = document.getElementById('log-app-name');
-  const minsEl = document.getElementById('log-app-mins');
-  const modeEl = document.getElementById('log-app-mode');
-
-  const name = nameEl.value.trim();
-  const mins = parseInt(minsEl.value);
-  const mode = modeEl.value;
-
-  if (!name) { showToast('⚠️ Enter an app name'); return; }
-  if (!mins || mins < 1) { showToast('⚠️ Enter valid minutes'); return; }
-
-  const key = todayKey();
-  const day = getOrCreateDay(db, key);
-
-  const session = {
-    app: name, mins, mode,
-    timestamp: Date.now(),
-    time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})
-  };
-
-  day.sessions.push(session);
-  db.allTimeSessions++;
-  updateStreak(db);
-
-  const oldScore = day.score;
-  day.score = computeScore(db, day);
-  const xpGained = scoreToXP(day.score, mins);
-  day.xpEarned = (day.xpEarned || 0) + xpGained;
-  db.totalXp += xpGained;
-
-  if (day.score > db.bestScore) db.bestScore = day.score;
-
-  const newAchs = checkAchievements(db);
-  saveDB(db);
-
-  nameEl.value = '';
-  minsEl.value = '';
-
-  showScoreChange(day.score - oldScore);
-  renderDashboard();
-  renderChartsIfActive();
-
-  showToast(`✅ Logged ${formatTime(mins)} on ${name} · +${xpGained} XP`);
-
-  if (newAchs.length > 0) {
-    setTimeout(() => showToast(`🏆 Achievement unlocked: ${newAchs[0].name}!`), 1500);
-  }
-}
-
-function addCustomApp() {
-  const name = document.getElementById('new-app-name').value.trim();
-  const weight = parseInt(document.getElementById('new-app-weight').value);
-  if (!name) { showToast('⚠️ Enter an app name'); return; }
-  if (db.apps.find(a => a.name.toLowerCase() === name.toLowerCase())) {
-    showToast('⚠️ App already exists'); return;
-  }
-
-  const colors = ['#4ECDC4','#3498DB','#A259FF','#FF9F43','#2ECC71','#007ACC','#E84393'];
-  const icons = ['📱','🖥','💻','🎨','📊','🔧','🌐'];
-  db.apps.push({
-    name, weight, icon: icons[Math.floor(Math.random()*icons.length)],
-    color: colors[Math.floor(Math.random()*colors.length)], limit: null
-  });
-  saveDB(db);
-  renderWeightEditor();
-  renderAppLimits();
-  document.getElementById('new-app-name').value = '';
-  showToast(`✅ Added ${name} with weight ${weight > 0 ? '+' : ''}${weight}`);
-}
-
-// ═══════════════════════════════════════════════
-//  RENDER FUNCTIONS
-// ═══════════════════════════════════════════════
-
-function renderDashboard() {
-  const key = todayKey();
-  const day = getOrCreateDay(db, key);
-  const score = day.score;
-  const levelInfo = getLevelInfo(db.totalXp);
-
-  // Score hero
-  const scoreEl = document.getElementById('live-score');
-  const oldNum = parseInt(scoreEl.textContent) || 0;
-  scoreEl.textContent = score;
-  document.getElementById('score-fill').style.width = score + '%';
-  document.getElementById('score-label').textContent = scoreToLabel(score);
-  document.getElementById('score-date').textContent = formatDate();
-
-  // vs yesterday
-  const yesterday = (() => {
-    const d = new Date(); d.setDate(d.getDate()-1);
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  })();
-  const yDay = db.days[yesterday];
-  const vsYest = document.getElementById('vs-yesterday');
-  if (yDay) {
-    const diff = score - yDay.score;
-    vsYest.textContent = (diff >= 0 ? '+' : '') + diff;
-    vsYest.style.color = diff >= 0 ? 'var(--green)' : 'var(--red)';
-  } else {
-    vsYest.textContent = '—';
-    vsYest.style.color = 'var(--text2)';
-  }
-
-  // Weekly avg
-  const last7 = Array.from({length:7},(_,i)=>{
-    const d = new Date(); d.setDate(d.getDate()-i);
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }).map(k => db.days[k]?.score || 0);
-  const avg = Math.round(last7.filter(s=>s>0).reduce((a,b)=>a+b,0) / Math.max(1,last7.filter(s=>s>0).length));
-  document.getElementById('weekly-avg').textContent = avg || '—';
-
-  // Tracked time
-  const totalMins = day.sessions.reduce((a,s)=>a+s.mins,0);
-  document.getElementById('tracked-time').textContent = formatTime(totalMins);
-
-  // XP / Level
-  document.getElementById('level-label').textContent = `⚡ Level ${levelInfo.level} · ${levelInfo.title}`;
-  document.getElementById('xp-val').textContent = `${db.totalXp.toLocaleString()} XP`;
-  document.getElementById('xp-fill').style.width = levelInfo.pct + '%';
-
-  // Streak
-  document.getElementById('streak-count').textContent = db.streak;
-
-  // Boost toggle
-  const bt = document.getElementById('boost-toggle');
-  bt.className = 'toggle ' + (db.boostEnabled ? 'on' : 'off');
-  document.getElementById('boost-hours').textContent = db.boostEnabled ? 'Active' : 'Off';
-
-  // Notification banner
-  const notifBanner = document.getElementById('notif-banner');
-  const overLimitApps = getOverLimitApps(db, day);
-  if (overLimitApps.length > 0) {
-    const ola = overLimitApps[0];
-    document.getElementById('notif-text').innerHTML = `You've spent <strong>${formatTime(ola.mins)}</strong> on ${ola.app} — ${formatTime(ola.mins - ola.limit)} over your daily limit.`;
-    notifBanner.classList.remove('hidden');
-  } else {
-    notifBanner.classList.add('hidden');
-  }
-
-  // App usage list
-  renderAppUsageList(db, day);
-
-  // AI Insights
-  renderInsights(db, day);
-}
-
-function getOverLimitApps(db, day) {
-  const appTotals = {};
-  for (const s of day.sessions) {
-    appTotals[s.app] = (appTotals[s.app] || 0) + s.mins;
-  }
-  return Object.entries(appTotals).filter(([app, mins]) => {
-    const cfg = getAppConfig(db, app);
-    return cfg.limit && mins > cfg.limit;
-  }).map(([app, mins]) => ({ app, mins, limit: getAppConfig(db, app).limit }));
-}
-
-function renderAppUsageList(db, day) {
-  const el = document.getElementById('app-usage-list');
-  if (!day.sessions || day.sessions.length === 0) {
-    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">No apps logged yet. Add your first session above!</div>';
-    return;
-  }
-
-  // Aggregate by app
-  const appTotals = {};
-  for (const s of day.sessions) {
-    if (!appTotals[s.app]) appTotals[s.app] = { mins:0, modes:{}, sessions:0 };
-    appTotals[s.app].mins += s.mins;
-    appTotals[s.app].modes[s.mode] = (appTotals[s.app].modes[s.mode]||0) + s.mins;
-    appTotals[s.app].sessions++;
-  }
-
-  const maxMins = Math.max(...Object.values(appTotals).map(a=>a.mins));
-
-  el.innerHTML = Object.entries(appTotals).sort((a,b)=>b[1].mins-a[1].mins).map(([name, data]) => {
-    const cfg = getAppConfig(db, name);
-    const pct = Math.round(data.mins / maxMins * 100);
-    const isOver = cfg.limit && data.mins > cfg.limit;
-    const modeTag = Object.entries(data.modes).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'work';
-    const modeColors = { work:'var(--green)', study:'var(--blue)', entertainment:'var(--red)', timepass:'var(--orange)' };
-    const modeEmojis = { work:'💼', study:'📚', entertainment:'🎮', timepass:'☕' };
-    const weightLabel = cfg.weight !== 0 ? (cfg.weight > 0 ? `+${cfg.weight}` : cfg.weight) : '0';
-    const weightColor = cfg.weight > 0 ? 'var(--green)' : cfg.weight < 0 ? 'var(--red)' : 'var(--text3)';
-
-    return `<div class="app-row">
-      <div class="app-icon" style="background:${cfg.color}22;color:${cfg.color}">${cfg.icon}</div>
-      <div class="app-info">
-        <div class="app-name">${name}</div>
-        <div class="app-time">${formatTime(data.mins)} · ${data.sessions} session${data.sessions>1?'s':''}</div>
-        <div class="app-mode-tag" style="background:${modeColors[modeTag]}22;color:${modeColors[modeTag]}">${modeEmojis[modeTag]} ${modeTag.charAt(0).toUpperCase()+modeTag.slice(1)}${isOver?' · ⚠️ Over limit':''}</div>
-      </div>
-      <div class="app-bar-wrap">
-        <div style="width:${pct}%;background:${isOver?'var(--red)':cfg.color};opacity:0.7;height:4px;border-radius:2px;margin-bottom:4px;"></div>
-        <div style="font-size:11px;font-weight:600;text-align:right;color:${weightColor}">${weightLabel}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderInsights(db, day) {
-  const container = document.getElementById('insights-container');
-  const insights = generateInsights(db, day);
-  if (insights.length === 0) {
-    container.innerHTML = '<div class="insight-card"><div class="insight-icon">💡</div><div><div class="insight-text">Log more sessions to get personalized insights.</div></div></div>';
-    return;
-  }
-  container.innerHTML = insights.map(ins => `
-    <div class="insight-card">
-      <div class="insight-icon">${ins.icon}</div>
-      <div>
-        <div class="insight-text">${ins.text}</div>
-        <div class="insight-tag" style="background:${ins.tagBg};color:${ins.tagColor}">${ins.tag}</div>
-      </div>
-    </div>`).join('');
-}
-
-function generateInsights(db, day) {
-  const insights = [];
-  if (!day.sessions || day.sessions.length === 0) return insights;
-
-  const appTotals = {};
-  for (const s of day.sessions) {
-    appTotals[s.app] = (appTotals[s.app]||0) + s.mins;
-  }
-
-  // Over-limit insight
-  const overLimits = getOverLimitApps(db, day);
-  for (const ol of overLimits.slice(0,1)) {
-    const cfg = getAppConfig(db, ol.app);
-    const scoreLoss = Math.round(Math.abs(cfg.weight) * (ol.mins - ol.limit) / 60 * 10);
-    insights.push({
-      icon:'💡',
-      text:`<strong>Reduce ${ol.app} by ${formatTime(ol.mins - ol.limit)}</strong> to protect your score. You're ${formatTime(ol.mins - ol.limit)} over your limit.`,
-      tag:`Score Impact: ~${scoreLoss} pts`,
-      tagBg:'rgba(255,217,61,0.15)',tagColor:'var(--accent4)'
-    });
-  }
-
-  // Productive app praise
-  const productive = Object.entries(appTotals).filter(([app]) => getAppConfig(db, app).weight >= 6).sort((a,b)=>b[1]-a[1]);
-  if (productive.length > 0 && productive[0][1] >= 30) {
-    insights.push({
-      icon:'⭐',
-      text:`<strong>${formatTime(productive[0][1])} on ${productive[0][0]}</strong> — great focused work! This is boosting your score significantly.`,
-      tag:'Top Productive App',
-      tagBg:'rgba(46,204,113,0.15)',tagColor:'var(--green)'
-    });
-  }
-
-  // Distraction warning
-  const distractions = Object.entries(appTotals).filter(([app]) => getAppConfig(db, app).weight <= -5).sort((a,b)=>b[1]-a[1]);
-  if (distractions.length > 0 && distractions[0][1] >= 20) {
-    const app = distractions[0][0];
-    insights.push({
-      icon:'⚠️',
-      text:`<strong>${app} is your biggest distraction today</strong> at ${formatTime(distractions[0][1])}. Consider limiting it to ${formatTime(Math.round(distractions[0][1]*0.5))}.`,
-      tag:'Reduce for +Score',
-      tagBg:'rgba(255,71,87,0.15)',tagColor:'var(--red)'
-    });
-  }
-
-  // Streak insight
-  if (db.streak >= 3) {
-    insights.push({
-      icon:'🔥',
-      text:`<strong>${db.streak}-day streak!</strong> You're on a roll. Keep logging today to maintain it.`,
-      tag:`${db.streak} Days Strong`,
-      tagBg:'rgba(255,107,107,0.15)',tagColor:'#FF6B6B'
-    });
-  }
-
-  // Focus session suggestion
-  const totalMins = day.sessions.reduce((a,s)=>a+s.mins,0);
-  if (totalMins > 60 && day.focusSessions?.length === 0) {
-    insights.push({
-      icon:'🎯',
-      text:`You've tracked ${formatTime(totalMins)} today but no focus sessions. <strong>Start a 25-min focus session</strong> to earn bonus XP!`,
-      tag:'Try Focus Mode',
-      tagBg:'rgba(108,99,255,0.15)',tagColor:'var(--accent)'
-    });
-  }
-
-  return insights.slice(0, 4);
-}
-
-// ═══════════════════════════════════════════════
-//  CHARTS
-// ═══════════════════════════════════════════════
-
-let scoreChartInst = null, pieChartInst = null, weekChartInst = null;
-
-function renderChartsIfActive() {
-  if (document.getElementById('page-charts').classList.contains('active')) initCharts(true);
-  if (document.getElementById('page-gamify').classList.contains('active')) initWeekChart(true);
-}
-
-function initCharts(force) {
-  const key = todayKey();
-  const day = getOrCreateDay(db, key);
-
-  // Score trend from sessions
-  const sessionsToday = [...day.sessions].sort((a,b)=>a.timestamp-b.timestamp);
-  const labels = ['Start', ...sessionsToday.map(s=>s.time), 'Now'];
-  const scores = [0];
-  let runSessions = [];
-  for (const s of sessionsToday) {
-    runSessions.push(s);
-    const tmpDay = {...day, sessions: runSessions};
-    scores.push(computeScore(db, tmpDay));
-  }
-  scores.push(day.score);
-
-  const sc = document.getElementById('scoreChart');
-  if (sc) {
-    if (scoreChartInst) scoreChartInst.destroy();
-    scoreChartInst = new Chart(sc, {
-      type:'line',
-      data:{
-        labels,
-        datasets:[{
-          data: scores,
-          borderColor:'#6C63FF',
-          backgroundColor:'rgba(108,99,255,0.1)',
-          fill:true, tension:0.4,
-          pointBackgroundColor:'#6C63FF', pointRadius:3
-        }]
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{legend:{display:false}},
-        scales:{
-          x:{ticks:{color:'#9899A8',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}},
-          y:{min:0,max:100,ticks:{color:'#9899A8',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}}
-        }
-      }
-    });
-  }
-
-  // Pie chart
-  const appTotals = {};
-  for (const s of day.sessions) appTotals[s.app] = (appTotals[s.app]||0) + s.mins;
-  const sorted = Object.entries(appTotals).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const totalMins = Object.values(appTotals).reduce((a,b)=>a+b,0);
-
-  const pc = document.getElementById('pieChart');
-  if (pc) {
-    if (pieChartInst) pieChartInst.destroy();
-    if (sorted.length === 0) {
-      document.getElementById('pie-legend').innerHTML = '<div style="color:var(--text3);font-size:12px">No data yet</div>';
-      document.getElementById('pie-center-val').textContent = '0m';
-    } else {
-      const colors = sorted.map(([app]) => getAppConfig(db, app).color || '#6C63FF');
-      pieChartInst = new Chart(pc, {
-        type:'doughnut',
-        data:{labels:sorted.map(([a])=>a), datasets:[{data:sorted.map(([,m])=>m), backgroundColor:colors, borderWidth:0}]},
-        options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false}}}
+// ════════════════════════════════════════════════════════════════
+//  CLOUDFLARE KV STORAGE LAYER
+// ════════════════════════════════════════════════════════════════
+
+const CF = {
+  endpoint: localStorage.getItem('cf_endpoint') || '',
+  token: localStorage.getItem('cf_token') || '',
+
+  _key(username, dataKey) {
+    return `user:${username}:${dataKey}`;
+  },
+
+  async get(username, dataKey) {
+    if (!this.endpoint) return null;
+    try {
+      const r = await fetch(`${this.endpoint}/kv/${this._key(username, dataKey)}`, {
+        headers: this.token ? { 'Authorization': `Bearer ${this.token}` } : {}
       });
-      document.getElementById('pie-center-val').textContent = formatTime(totalMins);
-      document.getElementById('pie-legend').innerHTML = sorted.map(([app,mins]) => {
-        const cfg = getAppConfig(db, app);
-        return `<div style="display:flex;justify-content:space-between;font-size:12px;">
-          <span style="display:flex;align-items:center;gap:5px;">
-            <span style="width:8px;height:8px;border-radius:2px;background:${cfg.color};display:inline-block;"></span>${app}
-          </span>
-          <span style="color:var(--text2)">${formatTime(mins)}</span>
-        </div>`;
-      }).join('');
-    }
-  }
+      if (!r.ok) return null;
+      const text = await r.text();
+      return text ? JSON.parse(text) : null;
+    } catch { return null; }
+  },
 
-  // Timeline
-  const tl = document.getElementById('timeline-container');
-  if (sessionsToday.length === 0) {
-    tl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">No sessions logged today.</div>';
-  } else {
-    const tlColors = { work:'rgba(46,204,113,0.25)', study:'rgba(52,152,219,0.25)', entertainment:'rgba(255,71,87,0.2)', timepass:'rgba(255,165,0,0.2)' };
-    const tlTextColors = { work:'var(--green)', study:'var(--blue)', entertainment:'#FF4757', timepass:'var(--orange)' };
-    tl.innerHTML = sessionsToday.map(s => {
-      const cfg = getAppConfig(db, s.app);
-      const modeEmoji = {work:'💼',study:'📚',entertainment:'🎮',timepass:'☕'}[s.mode]||'📱';
-      return `<div class="timeline-row">
-        <div class="tl-time">${s.time}</div>
-        <div class="tl-bar" style="background:${tlColors[s.mode]||'rgba(108,99,255,0.2)'};color:${tlTextColors[s.mode]||'var(--accent)'}">
-          ${modeEmoji} ${s.app} · ${formatTime(s.mins)}
-        </div>
-      </div>`;
-    }).join('');
-  }
-}
-
-function initWeekChart(force) {
-  const wc = document.getElementById('weekChart');
-  if (!wc) return;
-
-  const last7 = Array.from({length:7},(_,i)=>{
-    const d = new Date(); d.setDate(d.getDate()-6+i);
-    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const label = d.toLocaleDateString('en-US',{weekday:'short'});
-    return { key, label, score: db.days[key]?.score || 0 };
-  });
-
-  if (weekChartInst) weekChartInst.destroy();
-  weekChartInst = new Chart(wc, {
-    type:'bar',
-    data:{
-      labels: last7.map(d=>d.label),
-      datasets:[{
-        data: last7.map(d=>d.score),
-        backgroundColor: ctx => {
-          const idx = ctx.dataIndex;
-          return idx === 6 ? '#6C63FF' : 'rgba(108,99,255,0.3)';
+  async put(username, dataKey, value) {
+    if (!this.endpoint) return false;
+    try {
+      const r = await fetch(`${this.endpoint}/kv/${this._key(username, dataKey)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(this.token ? { 'Authorization': `Bearer ${this.token}` } : {})
         },
-        borderRadius:6
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{ticks:{color:'#9899A8',font:{size:10}},grid:{display:false}},
-        y:{min:0,max:100,ticks:{color:'#9899A8',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}}
-      }
+        body: JSON.stringify(value)
+      });
+      return r.ok;
+    } catch { return false; }
+  },
+
+  async del(username, dataKey) {
+    if (!this.endpoint) return false;
+    try {
+      const r = await fetch(`${this.endpoint}/kv/${this._key(username, dataKey)}`, {
+        method: 'DELETE',
+        headers: this.token ? { 'Authorization': `Bearer ${this.token}` } : {}
+      });
+      return r.ok;
+    } catch { return false; }
+  },
+
+  // Verify credentials — expects GET /kv/user:{u}:__auth → {passwordHash}
+  // Simple local hash approach (SHA-256 via SubtleCrypto)
+  async hashPassword(pass) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  },
+
+  async signUp(username, password) {
+    if (!this.endpoint) {
+      // offline mode: store locally
+      const existing = localStorage.getItem(`auth:${username}`);
+      if (existing) return { ok: false, error: 'Username already taken' };
+      const hash = await this.hashPassword(password);
+      localStorage.setItem(`auth:${username}`, hash);
+      return { ok: true };
     }
+    // Check if user exists
+    const existing = await this.get(username, '__auth');
+    if (existing) return { ok: false, error: 'Username already taken' };
+    const hash = await this.hashPassword(password);
+    const ok = await this.put(username, '__auth', { hash });
+    return ok ? { ok: true } : { ok: false, error: 'Failed to create account. Check your CF config.' };
+  },
+
+  async signIn(username, password) {
+    const hash = await this.hashPassword(password);
+    if (!this.endpoint) {
+      // offline mode
+      const stored = localStorage.getItem(`auth:${username}`);
+      if (!stored) return { ok: false, error: 'Account not found' };
+      if (stored !== hash) return { ok: false, error: 'Incorrect password' };
+      return { ok: true };
+    }
+    const record = await this.get(username, '__auth');
+    if (!record) return { ok: false, error: 'Account not found' };
+    if (record.hash !== hash) return { ok: false, error: 'Incorrect password' };
+    return { ok: true };
+  }
+};
+
+// ════════════════════════════════════════════════════════════════
+//  SESSION & AUTH STATE
+// ════════════════════════════════════════════════════════════════
+
+let currentUser = null;
+let isOfflineMode = false;
+let syncStatus = 'idle'; // idle | syncing | synced | error
+
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem('ld_session')); } catch { return null; }
+}
+function setSession(user) {
+  sessionStorage.setItem('ld_session', JSON.stringify(user));
+  currentUser = user;
+}
+function clearSession() {
+  sessionStorage.removeItem('ld_session');
+  currentUser = null;
+}
+
+// Check for existing session on load
+(function checkExistingSession() {
+  const s = getSession();
+  if (s) {
+    currentUser = s;
+    isOfflineMode = s.offline || false;
+    startApp();
+  }
+})();
+
+// ════════════════════════════════════════════════════════════════
+//  LOGIN UI
+// ════════════════════════════════════════════════════════════════
+
+let authMode = 'signin';
+
+function switchAuthTab(mode) {
+  authMode = mode;
+  document.querySelectorAll('.login-tab').forEach((t,i) => {
+    t.classList.toggle('active', (mode==='signin'&&i===0)||(mode==='signup'&&i===1));
+  });
+  document.getElementById('confirm-group').style.display = mode === 'signup' ? '' : 'none';
+  document.getElementById('auth-btn').textContent = mode === 'signin' ? 'Sign In' : 'Create Account';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+function setAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function authSubmit() {
+  const username = document.getElementById('auth-username').value.trim().toLowerCase();
+  const password = document.getElementById('auth-password').value;
+  const confirm  = document.getElementById('auth-confirm').value;
+
+  if (!username || !password) { setAuthError('Please fill in all fields.'); return; }
+  if (authMode === 'signup' && password !== confirm) { setAuthError('Passwords do not match.'); return; }
+  if (username.length < 3) { setAuthError('Username must be at least 3 characters.'); return; }
+  if (password.length < 6) { setAuthError('Password must be at least 6 characters.'); return; }
+
+  const btn = document.getElementById('auth-btn');
+  btn.disabled = true;
+  btn.textContent = authMode === 'signin' ? 'Signing in…' : 'Creating account…';
+  document.getElementById('auth-error').style.display = 'none';
+
+  let result;
+  if (authMode === 'signin') result = await CF.signIn(username, password);
+  else result = await CF.signUp(username, password);
+
+  btn.disabled = false;
+  btn.textContent = authMode === 'signin' ? 'Sign In' : 'Create Account';
+
+  if (!result.ok) { setAuthError(result.error); return; }
+
+  isOfflineMode = !CF.endpoint;
+  setSession({ username, offline: isOfflineMode });
+  startApp();
+}
+
+function continueOffline() {
+  isOfflineMode = true;
+  const username = 'guest';
+  setSession({ username, offline: true });
+  startApp();
+}
+
+function logout() {
+  clearSession();
+  location.reload();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  CLOUDFLARE CONFIG UI
+// ════════════════════════════════════════════════════════════════
+
+function showCFConfig() {
+  document.getElementById('cf-endpoint').value = CF.endpoint;
+  document.getElementById('cf-token').value = CF.token;
+  document.getElementById('cf-modal').style.display = 'flex';
+  closeDropdown();
+}
+
+function hideCFConfig() { document.getElementById('cf-modal').style.display = 'none'; }
+
+function saveCFConfig() {
+  const ep = document.getElementById('cf-endpoint').value.trim().replace(/\/$/, '');
+  const tk = document.getElementById('cf-token').value.trim();
+  CF.endpoint = ep;
+  CF.token = tk;
+  localStorage.setItem('cf_endpoint', ep);
+  localStorage.setItem('cf_token', tk);
+  hideCFConfig();
+  toast(ep ? '☁ Cloud config saved' : '☁ Offline mode active');
+  if (currentUser) updateCloudUI();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  APP BOOTSTRAP
+// ════════════════════════════════════════════════════════════════
+
+async function startApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  // Nav user info
+  const u = currentUser.username;
+  const initials = u.slice(0, 2).toUpperCase();
+  document.getElementById('nav-avatar').textContent = initials;
+  document.getElementById('nav-username').textContent = u;
+  document.getElementById('nav-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+
+  updateCloudUI();
+
+  // Load data
+  await loadAllData();
+
+  renderDash();
+  startCountdowns();
+  window.addEventListener('resize', () => {
+    if (document.getElementById('page-dashboard').classList.contains('active')) renderWeekChart();
   });
 }
 
-// ═══════════════════════════════════════════════
-//  WEIGHT EDITOR
-// ═══════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+//  HYBRID STORAGE: localStorage (cache) + Cloudflare KV (cloud)
+// ════════════════════════════════════════════════════════════════
 
-function renderWeightEditor() {
-  const el = document.getElementById('weight-editor');
-  if (!el) return;
-  el.innerHTML = db.apps.map((a,i) => {
-    const col = a.weight > 0 ? '#2ECC71' : a.weight < 0 ? '#FF4757' : '#9899A8';
-    return `<div style="padding:10px 0;border-bottom:1px solid var(--border);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <div style="display:flex;gap:8px;align-items:center;">
-          <div style="width:28px;height:28px;border-radius:8px;background:${a.color}22;color:${a.color};display:flex;align-items:center;justify-content:center;font-size:14px;">${a.icon}</div>
-          <span style="font-size:13px;font-weight:500;">${a.name}</span>
-        </div>
-        <span style="font-size:16px;font-weight:700;color:${col};min-width:32px;text-align:right;" id="wval-${i}">${a.weight > 0 ? '+' : ''}${a.weight}</span>
-      </div>
-      <input type="range" min="-10" max="10" value="${a.weight}" class="weight-slider" style="width:100%;accent-color:${a.weight>0?'#2ECC71':'#FF4757'};"
-        oninput="updateWeight(${i},this.value)">
-    </div>`;
-  }).join('');
+function localKey(k) { return `${currentUser.username}:${k}`; }
+
+function localLoad(k, def) {
+  try { const v = localStorage.getItem(localKey(k)); return v ? JSON.parse(v) : def; } catch { return def; }
 }
+function localSave(k, v) { localStorage.setItem(localKey(k), JSON.stringify(v)); }
 
-function updateWeight(i, val) {
-  db.apps[i].weight = parseInt(val);
-  const el = document.getElementById('wval-' + i);
-  if (el) {
-    const col = val > 0 ? '#2ECC71' : val < 0 ? '#FF4757' : '#9899A8';
-    el.textContent = (val > 0 ? '+' : '') + val;
-    el.style.color = col;
+async function cloudLoad(k, def) {
+  if (isOfflineMode || !CF.endpoint) return localLoad(k, def);
+  const remote = await CF.get(currentUser.username, k);
+  if (remote !== null) {
+    localSave(k, remote); // cache locally
+    return remote;
   }
-  // Recalculate today's score with new weights
-  const key = todayKey();
-  const day = getOrCreateDay(db, key);
-  day.score = computeScore(db, day);
-  saveDB(db);
-  renderDashboard();
+  return localLoad(k, def);
 }
 
-function renderAppLimits() {
-  const el = document.getElementById('app-limits-list');
-  if (!el) return;
-  el.innerHTML = db.apps.slice(0,8).map((a,i) => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-      <div style="display:flex;gap:8px;align-items:center;">
-        <span>${a.icon}</span>
-        <div>
-          <div style="font-size:13px;">${a.name}</div>
-          <div style="font-size:10px;color:var(--text3)">${a.limit ? 'Limit: ' + formatTime(a.limit) : 'No limit set'}</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <input type="number" placeholder="min" min="5" max="720" value="${a.limit||''}"
-          style="width:55px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r3);padding:5px 8px;color:var(--text);font-size:12px;font-family:'Space Grotesk',sans-serif;"
-          onchange="setAppLimit(${i},this.value)">
-      </div>
-    </div>`).join('');
+async function cloudSave(k, v) {
+  localSave(k, v); // always update local cache immediately
+  if (isOfflineMode || !CF.endpoint) return;
+  setCloudStatus('syncing');
+  const ok = await CF.put(currentUser.username, k, v);
+  setCloudStatus(ok ? 'synced' : 'error');
+  if (!ok) toast('⚠ Cloud sync failed — changes saved locally');
 }
 
-function setAppLimit(i, val) {
-  const mins = parseInt(val);
-  db.apps[i].limit = (isNaN(mins) || mins <= 0) ? null : mins;
-  saveDB(db);
-  renderDashboard();
-  showToast(`✅ Limit ${db.apps[i].limit ? 'set to ' + formatTime(db.apps[i].limit) : 'removed'} for ${db.apps[i].name}`);
+function setCloudStatus(status) {
+  syncStatus = status;
+  const dot = document.getElementById('cloud-dot');
+  const label = document.getElementById('cloud-label');
+  if (!dot) return;
+  dot.className = 'cloud-dot';
+  if (status === 'syncing') { dot.classList.add('syncing'); label.textContent = 'syncing'; }
+  else if (status === 'synced') { dot.classList.add('synced'); label.textContent = 'synced'; }
+  else if (status === 'error') { dot.classList.add('error'); label.textContent = 'error'; }
+  else { label.textContent = isOfflineMode ? 'offline' : (CF.endpoint ? 'idle' : 'local'); }
 }
 
-// ═══════════════════════════════════════════════
-//  GAMIFY PAGE
-// ═══════════════════════════════════════════════
-
-function renderGamify() {
-  const levelInfo = getLevelInfo(db.totalXp);
-  document.getElementById('level-badge').textContent = levelInfo.level;
-  document.getElementById('level-title-gamify').textContent = levelInfo.title;
-  document.getElementById('xp-to-next').textContent = `${(db.totalXp).toLocaleString()} / ${(db.totalXp - levelInfo.currentXp + levelInfo.nextXp).toLocaleString()} XP to Level ${levelInfo.level+1}`;
-  document.getElementById('xp-fill-gamify').style.width = levelInfo.pct + '%';
-
-  const key = todayKey();
-  const day = getOrCreateDay(db, key);
-  document.getElementById('today-xp-gamify').textContent = '+' + (day.xpEarned || 0);
-  document.getElementById('streak-gamify').textContent = db.streak;
-
-  // All-time stats
-  document.getElementById('stat-total-xp').textContent = db.totalXp.toLocaleString();
-  document.getElementById('stat-best-score').textContent = db.bestScore;
-  document.getElementById('stat-total-sessions').textContent = db.allTimeSessions;
-  document.getElementById('stat-focus-count').textContent = db.totalFocusSessions;
-
-  // Achievements
-  const achEl = document.getElementById('achievements-list');
-  achEl.innerHTML = ACHIEVEMENTS.map(ach => {
-    const unlocked = db.unlockedAchievements.includes(ach.id);
-    return `<div class="achievement${unlocked?'':' ach-locked'}">
-      <div class="ach-icon">${ach.icon}</div>
-      <div class="ach-info">
-        <div class="ach-name">${ach.name}</div>
-        <div class="ach-desc">${ach.desc}</div>
-      </div>
-      <div style="font-size:11px;color:${unlocked?'var(--green)':'var(--text3)'}">${unlocked?'Unlocked':'Locked'}</div>
-    </div>`;
-  }).join('');
-
-  initWeekChart();
+function updateCloudUI() {
+  setCloudStatus(CF.endpoint && !isOfflineMode ? 'idle' : 'idle');
 }
 
-// ═══════════════════════════════════════════════
-//  FOCUS TIMER
-// ═══════════════════════════════════════════════
-
-let focusRunning = false, focusSecs = 25*60, focusMax = 25*60, focusInterval = null, focusBoostActive = true;
-
-function setDuration(mins, el) {
-  if (focusRunning) return;
-  el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  focusSecs = mins*60; focusMax = mins*60;
-  updateTimerDisplay();
-  document.getElementById('focus-progress-bar').style.width = '0%';
+function showSyncStatus() {
+  if (!CF.endpoint) { toast('Running in local mode. Configure Cloudflare to enable cloud sync.'); }
+  else { toast(`Cloud: ${CF.endpoint.replace('https://', '')}`); }
 }
 
-function updateTimerDisplay() {
-  const m = Math.floor(focusSecs/60).toString().padStart(2,'0');
-  const s = (focusSecs%60).toString().padStart(2,'0');
-  document.getElementById('focus-timer').textContent = m+':'+s;
-  const pct = (1 - focusSecs/focusMax)*100;
-  document.getElementById('focus-progress-bar').style.width = pct+'%';
-}
-
-function toggleFocus() {
-  const btn = document.getElementById('focus-main-btn');
-  const status = document.getElementById('focus-status');
-  if (!focusRunning) {
-    focusRunning = true;
-    btn.textContent = '⏸ Pause Session';
-    btn.className = 'focus-btn stop';
-    status.textContent = 'Session in progress...';
-    focusInterval = setInterval(() => {
-      if (focusSecs > 0) { focusSecs--; updateTimerDisplay(); }
-      else {
-        clearInterval(focusInterval); focusRunning = false;
-        btn.textContent = '▶ Start Focus Session';
-        btn.className = 'focus-btn start';
-        const minsCompleted = Math.round(focusMax/60);
-        completeFocusSession(minsCompleted);
-        focusSecs = focusMax;
-        updateTimerDisplay();
-        document.getElementById('focus-progress-bar').style.width = '0%';
-      }
-    },1000);
-  } else {
-    focusRunning = false; clearInterval(focusInterval);
-    btn.textContent = '▶ Resume Session'; btn.className = 'focus-btn start';
-    status.textContent = 'Paused';
+async function syncNow() {
+  if (!CF.endpoint) { toast('No cloud endpoint configured'); return; }
+  toast('↻ Syncing…');
+  setCloudStatus('syncing');
+  const keys = ['dash', 'entries', 'goals', 'history'];
+  let allOk = true;
+  for (const k of keys) {
+    const local = localLoad(k, null);
+    if (local !== null) {
+      const ok = await CF.put(currentUser.username, k, local);
+      if (!ok) allOk = false;
+    }
   }
+  setCloudStatus(allOk ? 'synced' : 'error');
+  toast(allOk ? '✓ All data synced to cloud' : '⚠ Some keys failed to sync');
+  closeDropdown();
 }
 
-function completeFocusSession(mins) {
-  const xp = Math.round(mins * 2.5);
-  db.totalXp += xp;
-  db.totalFocusSessions++;
+// ════════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════════
 
-  const key = todayKey();
-  const day = getOrCreateDay(db, key);
-  if (!day.focusSessions) day.focusSessions = [];
+const PILLARS = [
+  { id:'fit',     name:'Fitness',      icon:'🏃', color:'#5eead4', max:180 },
+  { id:'learn',   name:'Learning',     icon:'📚', color:'#818cf8', max:480 },
+  { id:'finance', name:'Finance',      icon:'💰', color:'#fbbf24', max:180 },
+  { id:'mind',    name:'Mindfulness',  icon:'🧘', color:'#c084fc', max:120 },
+];
 
-  const sess = {
-    mins, xp, score: day.score,
-    time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
-    label: ['Morning','Midday','Afternoon','Evening','Night'][Math.floor(new Date().getHours()/5)] + ' Session'
-  };
-  day.focusSessions.push(sess);
-  if (!db.focusSessions) db.focusSessions = [];
-  db.focusSessions.push(sess);
+let dashData = { fit:60, learn:180, finance:60, mind:30 };
+let entries  = [];
+let goals    = [];
+let currentGoalId = null;
 
-  updateStreak(db);
-  const newAchs = checkAchievements(db);
-  saveDB(db);
-
-  document.getElementById('focus-status').textContent = `✅ Session complete! +${xp} XP`;
-  showToast(`🎯 Focus session done! +${xp} XP earned`);
-  if (newAchs.length > 0) setTimeout(()=>showToast(`🏆 Achievement: ${newAchs[0].name}!`), 1500);
-
-  renderFocusSessions();
-  renderDashboard();
+async function loadAllData() {
+  [dashData, entries, goals] = await Promise.all([
+    cloudLoad('dash',    { fit:60, learn:180, finance:60, mind:30 }),
+    cloudLoad('entries', []),
+    cloudLoad('goals',   []),
+  ]);
+  setCloudStatus(CF.endpoint && !isOfflineMode ? 'synced' : 'idle');
 }
 
-function renderFocusSessions() {
-  const key = todayKey();
-  const day = getOrCreateDay(db, key);
-  const sessions = day.focusSessions || [];
-  const el = document.getElementById('focus-sessions-list');
-  const totalXp = sessions.reduce((a,s)=>a+s.xp,0);
+// ════════════════════════════════════════════════════════════════
+//  NAV / DROPDOWN
+// ════════════════════════════════════════════════════════════════
 
-  document.getElementById('focus-session-count').textContent = sessions.length;
-  document.getElementById('focus-xp-total').textContent = '+' + totalXp;
-
-  if (sessions.length === 0) {
-    el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">No focus sessions yet today.</div>';
-    return;
-  }
-  el.innerHTML = sessions.map(s => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(78,205,196,0.08);border-radius:var(--r3);margin-bottom:8px;">
-      <div><div style="font-size:13px;font-weight:500;">${s.label}</div><div style="font-size:11px;color:var(--text3)">${s.time} · ${s.mins} min</div></div>
-      <div style="text-align:right;"><div style="font-size:16px;font-weight:700;color:var(--green)">+${s.xp} XP</div><div style="font-size:10px;color:var(--text3)">score: ${s.score}</div></div>
-    </div>`).join('');
-}
-
-function toggleFocusBoost() {
-  const t = document.getElementById('focus-boost-toggle');
-  focusBoostActive = !focusBoostActive;
-  t.className = 'toggle ' + (focusBoostActive ? 'on' : 'off');
-}
-
-// ═══════════════════════════════════════════════
-//  BOOST TOGGLE
-// ═══════════════════════════════════════════════
-
-function toggleBoost() {
-  db.boostEnabled = !db.boostEnabled;
-  const key = todayKey();
-  const day = getOrCreateDay(db, key);
-  day.score = computeScore(db, day);
-  if (day.score > db.bestScore) db.bestScore = day.score;
-  saveDB(db);
-  renderDashboard();
-  showToast(db.boostEnabled ? '⚡ Boost Mode activated!' : 'Boost Mode disabled');
-}
-
-// ═══════════════════════════════════════════════
-//  SESSION POPUP
-// ═══════════════════════════════════════════════
-
-function showSessionPopup() {
-  document.querySelectorAll('.tag-btn').forEach(t=>t.classList.remove('selected'));
-  document.getElementById('popup-app-name').value = '';
-  document.getElementById('session-popup').classList.add('show');
-}
-function hideSessionPopup() { document.getElementById('session-popup').classList.remove('show'); }
-function selectTag(el, tag) {
-  document.querySelectorAll('.tag-btn').forEach(t=>t.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedTag = tag;
-  document.getElementById('log-app-mode').value = tag;
-}
-function startSession() {
-  const appName = document.getElementById('popup-app-name').value.trim();
-  hideSessionPopup();
-  if (appName) {
-    document.getElementById('log-app-name').value = appName;
-    document.getElementById('log-app-mode').value = selectedTag;
-    document.getElementById('log-app-mins').focus();
-    showToast(`Tagged as ${selectedTag}. Enter minutes and log!`);
-  } else {
-    showToast(`Mode set to ${selectedTag}. Log an app above!`);
-  }
-}
-
-// ═══════════════════════════════════════════════
-//  NAV
-// ═══════════════════════════════════════════════
-
-function goPage(id, el) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  el.classList.add('active');
-  if (id==='charts') initCharts();
-  if (id==='gamify') { renderGamify(); }
-  if (id==='apps') { renderWeightEditor(); renderAppLimits(); }
-  if (id==='focus') renderFocusSessions();
+  event.target.classList.add('active');
+  closeDropdown();
+  if(id==='dashboard') renderDash();
+  if(id==='journal')   renderEntries();
+  if(id==='stakes')    renderGoals();
 }
 
-function setChartTab(type, el) {
-  el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
+function toggleDropdown() {
+  document.getElementById('user-dropdown').classList.toggle('open');
 }
-
-// ═══════════════════════════════════════════════
-//  TOAST & SCORE CHANGE ANIMATION
-// ═══════════════════════════════════════════════
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(()=>t.classList.remove('show'), 2800);
+function closeDropdown() {
+  document.getElementById('user-dropdown').classList.remove('open');
 }
-
-function showScoreChange(diff) {
-  if (diff === 0) return;
-  const el = document.getElementById('score-change');
-  el.textContent = (diff > 0 ? '+' : '') + diff;
-  el.className = 'score-change ' + (diff > 0 ? 'up' : 'down');
-  requestAnimationFrame(()=>{ el.classList.add('anim'); });
-  setTimeout(()=>el.classList.remove('anim'), 1000);
-}
-
-// ═══════════════════════════════════════════════
-//  CUSTOM APP WEIGHT DISPLAY
-// ═══════════════════════════════════════════════
-
-document.getElementById('new-app-weight').addEventListener('input', function() {
-  const v = parseInt(this.value);
-  const d = document.getElementById('new-app-weight-display');
-  d.textContent = (v>0?'+':'')+v;
-  d.style.color = v>0?'var(--green)':v<0?'var(--red)':'var(--text3)';
+document.addEventListener('click', e => {
+  const chip = document.getElementById('user-chip');
+  const dd   = document.getElementById('user-dropdown');
+  if (chip && !chip.contains(e.target) && dd && !dd.contains(e.target)) closeDropdown();
 });
 
-// ═══════════════════════════════════════════════
-//  AUTO-REFRESH & INIT
-// ═══════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════════════════
 
-// Auto-refresh score every minute (simulate live tracking)
-setInterval(()=>{ renderDashboard(); }, 60000);
+function renderDash() {
+  const rows = document.getElementById('pillar-rows');
+  rows.innerHTML = PILLARS.map(p => `
+    <div class="pillar-row">
+      <div class="pillar-icon" style="background:${p.color}22;">${p.icon}</div>
+      <div class="pillar-name">${p.name}</div>
+      <div class="pillar-slider">
+        <input type="range" min="0" max="${p.max}" step="1" value="${dashData[p.id]||0}"
+          oninput="updatePillar('${p.id}', this.value)" style="accent-color:${p.color}">
+      </div>
+      <div class="pillar-val" id="val-${p.id}">${dashData[p.id]||0}min</div>
+    </div>
+  `).join('');
+  renderPillarStats();
+  updateBalance();
+  renderWeekChart();
+}
 
-// Init
-renderDashboard();
-renderWeightEditor();
-renderAppLimits();
-renderFocusSessions();
+function updatePillar(id, v) {
+  dashData[id] = parseFloat(v);
+  document.getElementById('val-'+id).textContent = Math.round(parseFloat(v))+'min';
+  cloudSave('dash', dashData);
+  renderPillarStats();
+  updateBalance();
+  saveDaySnapshot();
+}
 
-// Boost toggle initial state
-const bt = document.getElementById('boost-toggle');
-bt.className = 'toggle ' + (db.boostEnabled ? 'on' : 'off');
+function renderPillarStats() {
+  const stats = document.getElementById('pillar-stats');
+  stats.innerHTML = PILLARS.map(p => {
+    const v = dashData[p.id]||0;
+    const pct = Math.round(Math.min(v/p.max,1)*100);
+    return `<div class="stat">
+      <div class="stat-label">${p.name}</div>
+      <div class="stat-val" style="color:${p.color}; font-size:20px;">${Math.round(v)}min</div>
+      <div class="pbar" style="margin-top:8px;"><div class="pbar-fill" style="width:${pct}%;background:${p.color};"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function updateBalance() {
+  const pcts = PILLARS.map(p => Math.min((dashData[p.id]||0)/p.max, 1)*100);
+  const avg = pcts.reduce((a,b)=>a+b,0)/pcts.length;
+  const max = Math.max(...pcts), min = Math.min(...pcts);
+  const imbalance = max - min;
+  const score = Math.max(0, Math.round(avg - imbalance*0.35));
+
+  document.getElementById('score-num').textContent = score;
+  let color, label, pos;
+  if(imbalance < 25) { color='#5eead4'; label='Well balanced'; pos=50; }
+  else if(imbalance < 50) { color='#fbbf24'; label='Slightly off'; pos = pcts[1]>pcts[0]?35:65; }
+  else { color='#f87171'; label='Unbalanced'; pos = pcts[1]>pcts[0]?18:82; }
+
+  document.getElementById('score-num').style.color = color;
+  document.getElementById('score-label').textContent = label;
+  document.getElementById('score-label').style.color = color;
+  document.getElementById('balance-needle').style.left = pos+'%';
+
+  const warn = document.getElementById('balance-warning');
+  if(imbalance >= 50) {
+    const neglectedP = PILLARS[pcts.indexOf(Math.min(...pcts))];
+    warn.style.display = 'block';
+    warn.textContent = `⚠ ${neglectedP.name} is being neglected (${Math.round(Math.min(...pcts))}% of target). Your balance score drops when one pillar is ignored.`;
+  } else { warn.style.display='none'; }
+}
+
+function saveDaySnapshot() {
+  const history = localLoad('history', {});
+  const today = new Date().toISOString().slice(0,10);
+  history[today] = {...dashData};
+  const keys = Object.keys(history).sort().slice(-7);
+  const trimmed = {};
+  keys.forEach(k => trimmed[k] = history[k]);
+  cloudSave('history', trimmed);
+  renderWeekChart();
+}
+
+function renderWeekChart() {
+  const canvas = document.getElementById('weekChart');
+  const ctx = canvas.getContext('2d');
+  const history = localLoad('history', {});
+  const today = new Date().toISOString().slice(0,10);
+  history[today] = {...dashData};
+
+  const days = [...Array(7)].map((_,i)=>{
+    const d = new Date(); d.setDate(d.getDate()-6+i);
+    return d.toISOString().slice(0,10);
+  });
+
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 800;
+  canvas.height = 120 * window.devicePixelRatio || 240;
+  ctx.scale(window.devicePixelRatio||1, window.devicePixelRatio||1);
+  const W = canvas.offsetWidth || 800, H = 120;
+  ctx.clearRect(0,0,W,H);
+
+  const dayLabels = days.map(d => {
+    const dt = new Date(d+'T12:00:00');
+    return dt.toLocaleDateString('en-US',{weekday:'short'}).slice(0,2);
+  });
+
+  const barW = (W - 80) / 7;
+  days.forEach((day, i) => {
+    const data = history[day] || {};
+    const score = PILLARS.reduce((sum, p) => {
+      return sum + Math.min((data[p.id]||0)/p.max,1)*100;
+    },0) / PILLARS.length;
+    const barH = (score/100) * (H - 40);
+    const x = 40 + i*barW + barW*0.15;
+    const bw = barW*0.7;
+
+    const grad = ctx.createLinearGradient(0, H-10-barH, 0, H-10);
+    grad.addColorStop(0, score > 60 ? '#5eead4' : score > 40 ? '#fbbf24' : '#f87171');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(x, H-10-barH, bw, barH, 4);
+    ctx.fill();
+
+    ctx.fillStyle = day===today ? '#f0efe8' : '#5f5d6b';
+    ctx.font = `${day===today?'500':'400'} 11px DM Sans`;
+    ctx.textAlign = 'center';
+    ctx.fillText(dayLabels[i], x + bw/2, H-1);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+//  JOURNAL
+// ════════════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+  const ji = document.getElementById('journal-input');
+  if (ji) ji.addEventListener('input', function() {
+    const words = this.value.trim().split(/\s+/).filter(w=>w).length;
+    document.getElementById('char-count').textContent = words + ' words';
+  });
+});
+
+async function analyzeEntry() {
+  const text = document.getElementById('journal-input').value.trim();
+  if(!text) { toast('Write something first!'); return; }
+
+  document.getElementById('ai-area').style.display = 'block';
+  document.getElementById('ai-thinking').style.display = 'flex';
+  document.getElementById('ai-result').style.display = 'none';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are an empathetic life coach analyzing journal entries. 
+Return ONLY a JSON object with exactly these fields:
+{
+  "insight": "2-3 sentence insight about patterns, mood, or what stands out (warm but concise)",
+  "mood": "single primary mood word (e.g. Productive, Anxious, Calm, Stagnant, Motivated, Tired)",
+  "tags": ["tag1","tag2","tag3"],
+  "pillars": {"fitness": 0-2, "learning": 0-2, "finance": 0-2, "mindfulness": 0-2}
+}
+Tags should be 1-2 word descriptors. Pillars score how much this day involved each area (0=none, 1=some, 2=significant).
+Return ONLY JSON, no markdown, no explanation.`,
+        messages:[{role:'user', content: `Analyze this journal entry:\n\n${text}`}]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content[0].text.replace(/```json|```/g,'').trim();
+    const result = JSON.parse(raw);
+
+    document.getElementById('ai-thinking').style.display = 'none';
+    document.getElementById('ai-result').style.display = 'block';
+    document.getElementById('ai-text').textContent = result.insight;
+
+    const tagColors = { Productive:'#5eead4,#0f2e2b', Anxious:'#f87171,#2e0f0f', Calm:'#818cf8,#1a1a2e', Motivated:'#5eead4,#0f2e2b', Stagnant:'#fbbf24,#2e2000', Tired:'#9896a4,#1e1e24' };
+    const [moodBg] = (tagColors[result.mood]||'#818cf8,#1a1a2e').split(',');
+    document.getElementById('ai-tags').innerHTML = `
+      <span class="tag" style="background:${moodBg}22;color:${moodBg};border:1px solid ${moodBg}44;">${result.mood}</span>
+      ${(result.tags||[]).map(t=>`<span class="tag" style="background:var(--bg4);color:var(--text2);">${t}</span>`).join('')}
+    `;
+    window._pendingAnalysis = result;
+
+  } catch(e) {
+    document.getElementById('ai-thinking').style.display = 'none';
+    document.getElementById('ai-result').style.display = 'block';
+    document.getElementById('ai-text').textContent = 'Could not reach AI analysis. Your entry will still be saved.';
+    document.getElementById('ai-tags').innerHTML = '';
+    window._pendingAnalysis = null;
+  }
+}
+
+async function saveEntry() {
+  const text = document.getElementById('journal-input').value.trim();
+  if(!text) { toast('Write something first!'); return; }
+  const analysis = window._pendingAnalysis;
+  const entry = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    text,
+    mood: analysis?.mood || null,
+    tags: analysis?.tags || [],
+    insight: analysis?.insight || null,
+  };
+  entries.unshift(entry);
+  if(entries.length > 100) entries.pop();
+  await cloudSave('entries', entries);
+  document.getElementById('journal-input').value = '';
+  document.getElementById('char-count').textContent = '0 words';
+  document.getElementById('ai-area').style.display = 'none';
+  window._pendingAnalysis = null;
+  renderEntries();
+  toast('Entry saved ✓');
+}
+
+function renderEntries() {
+  const list = document.getElementById('entries-list');
+  if(!entries.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📓</div><div class="empty-text">Your first entry will appear here</div></div>';
+    document.getElementById('recap-btn').style.display = 'none';
+    return;
+  }
+  if(entries.length >= 5) document.getElementById('recap-btn').style.display = 'inline-block';
+  list.innerHTML = '<div class="entry-list">' + entries.slice(0,20).map(e => {
+    const d = new Date(e.date);
+    const dateStr = d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    const moodTag = e.mood ? `<span class="tag" style="background:var(--bg4);color:var(--text2);">${e.mood}</span>` : '';
+    const extraTags = (e.tags||[]).slice(0,3).map(t=>`<span class="tag" style="background:var(--bg4);color:var(--text3);">${t}</span>`).join('');
+    return `<div class="entry-item">
+      <div class="entry-date">${dateStr}</div>
+      <div class="entry-text">${e.text.length>200?e.text.slice(0,200)+'…':e.text}</div>
+      ${e.mood||e.tags?.length ? `<div class="entry-tags">${moodTag}${extraTags}</div>` : ''}
+      ${e.insight?`<div style="font-size:12px;color:var(--text3);margin-top:8px;font-style:italic;border-top:1px solid var(--border);padding-top:8px;">${e.insight}</div>`:''}
+    </div>`;
+  }).join('') + '</div>';
+}
+
+async function generateRecap() {
+  if(entries.length < 3) { toast('Need at least 3 entries for a recap'); return; }
+  const card = document.getElementById('recap-card');
+  card.style.display = 'block';
+  document.getElementById('recap-content').innerHTML = '<div class="thinking"><div class="dot-pulse"><span></span><span></span><span></span></div><span>Generating your insights...</span></div>';
+
+  const sample = entries.slice(0,15).map((e,i)=>`Entry ${i+1} (${new Date(e.date).toLocaleDateString()}): ${e.text} [Mood: ${e.mood||'unknown'}]`).join('\n\n');
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are an insightful coach analyzing someone's journal patterns over time. Be specific and data-driven. Write 3-4 short, actionable insights about patterns you notice. Format as a short paragraph per insight. Be warm, direct, specific. Start with the most striking pattern.`,
+        messages:[{role:'user', content:`Analyze these journal entries and give a monthly recap:\n\n${sample}`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content[0].text;
+    document.getElementById('recap-content').innerHTML = `
+      <div class="insight"><div class="insight-icon">✦</div><div class="insight-text" style="white-space:pre-wrap;">${text}</div></div>
+    `;
+  } catch {
+    document.getElementById('recap-content').innerHTML = '<div style="color:var(--text2);font-size:14px;">Could not connect to AI. Try again.</div>';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+//  STAKES
+// ════════════════════════════════════════════════════════════════
+
+function renderGoals() {
+  const list = document.getElementById('goals-list');
+  if(!goals.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">No active commitments. Set one to build discipline.</div></div>`;
+    return;
+  }
+
+  list.innerHTML = goals.map(g => {
+    const deadline = new Date(g.deadline);
+    const now = new Date();
+    const msLeft = deadline - now;
+    const expired = msLeft <= 0;
+    const completed = g.completed;
+    const failed = expired && !completed;
+
+    let statusClass = '';
+    if(completed) statusClass = 'safe';
+    else if(failed) statusClass = 'danger';
+    else if(msLeft < 3*60*1000) statusClass = 'danger';
+
+    const timeStr = expired ? 'Deadline passed' : formatTimeLeft(msLeft);
+
+    return `<div class="goal-card ${statusClass}" style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">Commitment</div>
+          <div style="font-size:17px;font-weight:500;line-height:1.3;">${g.goal}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px;">Proof: ${g.proof}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">${completed?'Completed':'Time left'}</div>
+          <div class="countdown-display" style="color:${completed?'var(--green)':failed?'var(--red)':msLeft<3*3600*1000?'var(--amber)':'var(--text)'}" id="cd-${g.id}">${completed?'✓ Done':timeStr}</div>
+        </div>
+      </div>
+      <div class="referee-chip">
+        <div class="avatar">${g.referee.trim().split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+        <div>
+          <div style="font-size:13px;font-weight:500;">${g.referee}</div>
+          <div style="font-size:12px;color:var(--text2);">Referee · ${completed?'Notified of success':failed?'Shame message sent':'Watching'}</div>
+        </div>
+      </div>
+      ${failed?`<div class="consequence-box">Message sent to ${g.referee}: "${g.message}"</div>`:''}
+      ${!completed&&!failed?`
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button class="btn btn-green btn-sm" onclick="openProof('${g.id}')">Submit Proof ✓</button>
+          <button class="btn btn-sm btn-red" onclick="deleteGoal('${g.id}')">Remove</button>
+        </div>
+      `:''}
+      ${completed?`<div style="margin-top:10px;padding:10px 12px;background:var(--green-dim);border-radius:var(--radius-sm);font-size:12px;color:var(--green);">Proof: ${g.proofText}</div>`:''}
+    </div>`;
+  }).join('');
+
+  startCountdowns();
+}
+
+function startCountdowns() {
+  clearInterval(window._cdInterval);
+  window._cdInterval = setInterval(() => {
+    goals.forEach(g => {
+      if(g.completed) return;
+      const el = document.getElementById('cd-'+g.id);
+      if(!el) return;
+      const msLeft = new Date(g.deadline) - new Date();
+      if(msLeft <= 0) {
+        el.textContent = 'Expired';
+        el.style.color = 'var(--red)';
+        if(!g.failed) { g.failed = true; cloudSave('goals', goals); }
+      } else {
+        el.textContent = formatTimeLeft(msLeft);
+        el.style.color = msLeft < 3*60*1000 ? 'var(--amber)' : 'var(--text)';
+      }
+    });
+  }, 1000);
+}
+
+function formatTimeLeft(ms) {
+  const h = Math.floor(ms/3600000);
+  const m = Math.floor((ms%3600000)/60000);
+  const s = Math.floor((ms%60000)/1000);
+  if(h>24) return Math.floor(h/24)+'d ' + (h%24) + 'h';
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function showNewGoal() { document.getElementById('goal-modal').style.display='flex'; }
+function hideModal()   { document.getElementById('goal-modal').style.display='none'; }
+function hideModal2()  { document.getElementById('proof-modal').style.display='none'; }
+
+async function createGoal() {
+  const goal     = document.getElementById('g-goal').value.trim();
+  const hours    = parseInt(document.getElementById('g-hours').value)||60;
+  const proof    = document.getElementById('g-proof').value;
+  const referee  = document.getElementById('g-referee').value.trim();
+  const message  = document.getElementById('g-message').value.trim();
+  if(!goal||!referee) { toast('Fill in goal and referee name'); return; }
+  const deadline = new Date(Date.now() + hours*60*1000).toISOString();
+  goals.unshift({ id: String(Date.now()), goal, deadline, proof, referee, message: message||`Hey, ${referee} — I set a commitment and didn't follow through. Just thought you should know.`, completed:false, failed:false });
+  await cloudSave('goals', goals);
+  hideModal();
+  renderGoals();
+  toast('Commitment locked in 🔒');
+}
+
+function openProof(id) {
+  currentGoalId = id;
+  const g = goals.find(x=>x.id===id);
+  document.getElementById('proof-modal-sub').textContent = `Proof type: ${g.proof}`;
+  document.getElementById('proof-input').value = '';
+  document.getElementById('proof-modal').style.display='flex';
+}
+
+async function submitProof() {
+  const text = document.getElementById('proof-input').value.trim();
+  if(!text) { toast('Add your proof!'); return; }
+  const g = goals.find(x=>x.id===currentGoalId);
+  if(g) { g.completed = true; g.proofText = text; await cloudSave('goals', goals); }
+  hideModal2();
+  renderGoals();
+  toast('Goal completed! 🎉 ' + (g?.referee ? g.referee + ' has been notified.' : ''));
+}
+
+async function deleteGoal(id) {
+  goals = goals.filter(g=>g.id!==id);
+  await cloudSave('goals', goals);
+  renderGoals();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════════════════
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 3000);
+}
 </script>
 </body>
 </html>
